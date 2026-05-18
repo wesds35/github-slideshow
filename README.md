@@ -11,3 +11,29 @@ I'm the GitHub Learning Lab bot and I'm here to help guide you in your journey t
 I'll meet you over there, can't wait to get started!
 
 This course is using the :sparkles: open source project [reveal.js](https://github.com/hakimel/reveal.js/). In some cases we’ve made changes to the history so it would behave during class, so head to the original project repo to learn more about the cool people behind this project.
+
+## Market Game Theory Analyzer
+
+This repository now includes `market_game_theory.py`, a Python script that scores stocks/ETFs and countries using a game-theory-inspired payoff model.
+
+### Data sources (free APIs)
+- Yahoo Finance public endpoints (price history, profile, and news search where available)
+- World Bank API (GDP growth and population growth)
+
+### What it evaluates
+- Price momentum and volatility-adjusted return
+- News headline sentiment (keyword-based)
+- Company quality/valuation proxies when available
+- Country macro profile (GDP + population growth)
+
+### Example
+```bash
+python3 market_game_theory.py --ticker AAPL --ticker SPY --country USA
+```
+
+### Ratings
+- `Strong Buy` (80+)
+- `Buy` (67-79.99)
+- `Hold` (52-66.99)
+- `Reduce` (37-51.99)
+- `Avoid` (<37)
