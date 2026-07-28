@@ -2,7 +2,9 @@
 
 This document is the single source of truth for the Sanders Strength workout-tracking app. It captures the product concept, data model, feature set, and brand/UI system established for the 1.0 mockup so future work (design or engineering) can pick up without re-deriving decisions.
 
-Mockup: `sanders-strength/mockup/index.html` (open any `.html` file in the folder directly in a browser, no build step required).
+Mockup (static, visual reference only): `sanders-strength/mockup/index.html` (open any `.html` file in the folder directly in a browser, no build step required).
+
+Functional app (real, local-first, data-backed): `sanders-strength/app` — a Vite + React + TypeScript app with all data in IndexedDB. See `sanders-strength/app/README.md` for how to run it and what's real vs. simulated in this version.
 
 ---
 
