@@ -59,7 +59,7 @@ Badges are awarded automatically when an athlete's cumulative volume crosses a t
 | 5 | **Einherjar** | 1,000,000 |
 | 6 | **Valhalla** | 5,000,000 |
 
-Distance and wattage volume have their own parallel badge tracks (same tier names, different thresholds/units — e.g., distance tiers in cumulative miles moved, wattage tiers in cumulative kJ), so an athlete can hold badges across three tracks (Iron/load, Road/distance, Engine/wattage), plus per-lift badges (e.g., first badge on Squat specifically vs. total-body volume). Badges are awarded per-athlete, are permanent once earned, and appear on both the athlete's and coach's dashboards with the date earned.
+Distance and wattage volume have their own parallel badge tracks (same tier names, thresholds sized to each track's actual units — distance volume is distance × load in yd·lb, wattage volume is watts × seconds in W·s, so both use a load-scale threshold curve rather than raw miles or kilojoules: 5,000 / 25,000 / 75,000 / 250,000 / 750,000 / 3,000,000), so an athlete can hold badges across three tracks (Iron/load, Road/distance, Engine/wattage), plus per-lift badges (e.g., first badge on Squat specifically vs. total-body volume). Badges are awarded per-athlete, are permanent once earned, and appear on both the athlete's and coach's dashboards with the date earned.
 
 v1.0 scope: badge thresholds are configurable by the coach (not hardcoded), so they can be tuned per athlete population (youth vs. collegiate vs. pro).
 

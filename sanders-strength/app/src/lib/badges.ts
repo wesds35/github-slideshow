@@ -10,10 +10,14 @@ const DEFAULT_TIERS: Array<{ tier: number; name: string }> = [
   { tier: 6, name: "Valhalla" },
 ];
 
+// Distance volume is distance × load (yd·lb) and wattage volume is watts × seconds (W·s) — see
+// calcVolume in ./volume.ts — so both are large, load-scale numbers, not raw miles or kilojoules.
+// Thresholds are sized against those actual units, not the smaller "true" physical unit a coach
+// might guess at a glance.
 const DEFAULT_THRESHOLDS: Record<VolumeTrack, number[]> = {
   load: [10_000, 50_000, 150_000, 500_000, 1_000_000, 5_000_000],
-  distance: [10, 50, 150, 400, 1_000, 5_000],
-  wattage: [500, 2_000, 5_000, 15_000, 40_000, 150_000],
+  distance: [5_000, 25_000, 75_000, 250_000, 750_000, 3_000_000],
+  wattage: [5_000, 25_000, 75_000, 250_000, 750_000, 3_000_000],
 };
 
 /**

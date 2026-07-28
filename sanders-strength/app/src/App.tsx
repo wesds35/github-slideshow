@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import { IdentityProvider } from "./context/identity";
 import { seedDemoDataIfEmpty } from "./lib/seed";
 import { Splash } from "./pages/Splash";
@@ -26,7 +26,7 @@ function App() {
 
   return (
     <IdentityProvider>
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
           <Route path="/" element={<Splash />} />
 
@@ -50,7 +50,7 @@ function App() {
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </IdentityProvider>
   );
 }

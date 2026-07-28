@@ -10,7 +10,7 @@ const TRACK_LABEL: Record<VolumeTrack, string> = {
   wattage: "Wattage Volume",
 };
 
-const TRACK_UNIT: Record<VolumeTrack, string> = { load: "lb", distance: "mi", wattage: "kJ" };
+const TRACK_UNIT: Record<VolumeTrack, string> = { load: "lb", distance: "yd·lb", wattage: "W·s" };
 
 export function BadgeCatalog() {
   const [track, setTrack] = useState<VolumeTrack>("load");
