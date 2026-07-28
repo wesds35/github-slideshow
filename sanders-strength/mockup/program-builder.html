@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Program Builder · Sanders Strength</title>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="assets/logo.svg" alt="">
+      <div class="brand-name"><b>SANDERS</b><span>STRENGTH</span></div>
+    </div>
+    <nav class="nav-group">
+      <div class="nav-label">Coach</div>
+      <a class="nav-link" href="dashboard.html"><span class="dot"></span> Dashboard</a>
+      <a class="nav-link active" href="program-builder.html"><span class="dot"></span> Program Builder</a>
+      <a class="nav-link" href="scheduler.html"><span class="dot"></span> Scheduler</a>
+      <a class="nav-link" href="badges.html"><span class="dot"></span> Badge Catalog</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-label">Preview As</div>
+      <a class="nav-link" href="athlete.html"><span class="dot"></span> Athlete View</a>
+      <a class="nav-link" href="log-workout.html"><span class="dot"></span> Log Workout</a>
+    </nav>
+    <div class="sidebar-footer">Local-first. Athlete data is never shared or sold. v1.0</div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="eyebrow">Program Builder</div>
+        <h1>Off-Season Strength Block</h1>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-ghost">Duplicate</button>
+        <button class="btn btn-primary">Assign to Athletes</button>
+      </div>
+    </div>
+
+    <div class="grid grid-3" style="margin-bottom:22px;">
+      <div class="field">
+        <label>Program Name</label>
+        <input value="Off-Season Strength Block">
+      </div>
+      <div class="field">
+        <label>Duration</label>
+        <input value="8 Weeks">
+      </div>
+      <div class="field">
+        <label>Assigned To</label>
+        <input value="12 athletes · Varsity Group">
+      </div>
+    </div>
+
+    <div class="builder-week">
+      <div class="builder-week-head">
+        <strong>Week 1</strong>
+        <button class="btn btn-ghost btn-sm">+ Add Day</button>
+      </div>
+      <div class="builder-day">
+        <div class="builder-day-title">
+          Day 1 — Lower Power
+          <button class="btn btn-ghost btn-sm">+ Add Exercise</button>
+        </div>
+        <div class="exercise-row">
+          <div class="ex-name">Back Squat</div>
+          <div class="ex-meta">5 × 3</div>
+          <div class="ex-meta">78% 1RM</div>
+          <div class="ex-meta">Rest 3:00</div>
+          <div><button class="btn btn-ghost btn-sm">Edit</button></div>
+        </div>
+        <div class="exercise-row">
+          <div class="ex-name">Trap Bar Jump</div>
+          <div class="ex-meta">4 × 5</div>
+          <div class="ex-meta">RPE 6</div>
+          <div class="ex-meta">Rest 2:00</div>
+          <div><button class="btn btn-ghost btn-sm">Edit</button></div>
+        </div>
+        <div class="exercise-row">
+          <div class="ex-name">Sled Drag — 40yd</div>
+          <div class="ex-meta">6 sets</div>
+          <div class="ex-meta">Distance</div>
+          <div class="ex-meta">Rest 1:30</div>
+          <div><button class="btn btn-ghost btn-sm">Edit</button></div>
+        </div>
+      </div>
+      <div class="builder-day">
+        <div class="builder-day-title">
+          Day 2 — Upper Push / Pull
+          <button class="btn btn-ghost btn-sm">+ Add Exercise</button>
+        </div>
+        <div class="exercise-row">
+          <div class="ex-name">Bench Press</div>
+          <div class="ex-meta">5 × 5</div>
+          <div class="ex-meta">75% 1RM</div>
+          <div class="ex-meta">Rest 2:30</div>
+          <div><button class="btn btn-ghost btn-sm">Edit</button></div>
+        </div>
+        <div class="exercise-row">
+          <div class="ex-name">Weighted Pull-Up</div>
+          <div class="ex-meta">4 × 6</div>
+          <div class="ex-meta">RPE 7</div>
+          <div class="ex-meta">Rest 2:00</div>
+          <div><button class="btn btn-ghost btn-sm">Edit</button></div>
+        </div>
+      </div>
+      <div class="builder-day">
+        <div class="builder-day-title">
+          Day 3 — Engine
+          <button class="btn btn-ghost btn-sm">+ Add Exercise</button>
+        </div>
+        <div class="exercise-row">
+          <div class="ex-name">Bike Erg Intervals</div>
+          <div class="ex-meta">8 × 30s</div>
+          <div class="ex-meta">Wattage</div>
+          <div class="ex-meta">Rest 2:00</div>
+          <div><button class="btn btn-ghost btn-sm">Edit</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="builder-week">
+      <div class="builder-week-head">
+        <strong>Week 2</strong>
+        <button class="btn btn-ghost btn-sm">+ Add Day</button>
+      </div>
+      <div class="builder-day">
+        <div class="builder-day-title">
+          Day 1 — Lower Power
+          <button class="btn btn-ghost btn-sm">+ Add Exercise</button>
+        </div>
+        <div class="exercise-row">
+          <div class="ex-name">Back Squat</div>
+          <div class="ex-meta">5 × 3</div>
+          <div class="ex-meta">81% 1RM</div>
+          <div class="ex-meta">Rest 3:00</div>
+          <div><button class="btn btn-ghost btn-sm">Edit</button></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-ghost">+ Add Week</button>
+
+    <hr class="rune-divider">
+    <p class="muted" style="max-width:640px;">Assigning a program places its days onto each athlete's scheduler starting from a chosen date. Every assignee gets an independent progress copy — logging a set never affects another athlete's copy of the same program.</p>
+  </main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

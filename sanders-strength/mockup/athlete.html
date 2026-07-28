@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Athlete Dashboard · Sanders Strength</title>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="assets/logo.svg" alt="">
+      <div class="brand-name"><b>SANDERS</b><span>STRENGTH</span></div>
+    </div>
+    <nav class="nav-group">
+      <div class="nav-label">Athlete</div>
+      <a class="nav-link active" href="athlete.html"><span class="dot"></span> My Dashboard</a>
+      <a class="nav-link" href="scheduler.html"><span class="dot"></span> My Schedule</a>
+      <a class="nav-link" href="log-workout.html"><span class="dot"></span> Log Workout</a>
+      <a class="nav-link" href="badges.html"><span class="dot"></span> My Badges</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-label">Preview As</div>
+      <a class="nav-link" href="dashboard.html"><span class="dot"></span> Coach View</a>
+    </nav>
+    <div class="sidebar-footer">Your data is visible only to you and your coach. v1.0</div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="eyebrow">Athlete Dashboard</div>
+        <h1>Erik Halvorsen</h1>
+      </div>
+      <div class="user-chip"><div class="avatar">EH</div> Off-Season Strength Block · Wk 4</div>
+    </div>
+
+    <div class="grid grid-4" style="margin-bottom:20px;">
+      <div class="card stat-card">
+        <div class="stat-label">Lifetime Rep Volume</div>
+        <div class="stat-value">612,400 <span style="font-size:.9rem;color:var(--text-faint);">lb</span></div>
+        <div class="stat-delta up">Berserker tier</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-label">Lifetime Distance</div>
+        <div class="stat-value">86.2 <span style="font-size:.9rem;color:var(--text-faint);">mi</span></div>
+        <div class="stat-delta up">Karl tier</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-label">Lifetime Wattage Work</div>
+        <div class="stat-value">4,180 <span style="font-size:.9rem;color:var(--text-faint);">kJ</span></div>
+        <div class="stat-delta up">Jarl tier</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-label">Adherence</div>
+        <div class="stat-value">92%</div>
+        <div class="stat-delta up">22/24 sessions</div>
+      </div>
+    </div>
+
+    <div class="grid grid-2" style="margin-bottom:20px; align-items:start;">
+      <div class="card">
+        <h3>Weekly Rep Volume</h3>
+        <div class="bars">
+          <div class="bar-col"><div class="bar" style="height:44%"></div><div class="bar-label">Wk1</div></div>
+          <div class="bar-col"><div class="bar" style="height:58%"></div><div class="bar-label">Wk2</div></div>
+          <div class="bar-col"><div class="bar" style="height:51%"></div><div class="bar-label">Wk3</div></div>
+          <div class="bar-col"><div class="bar" style="height:78%"></div><div class="bar-label">Wk4</div></div>
+        </div>
+        <p class="muted" style="margin-top:10px;">Total this block: 231,900 lb across squat, bench, deadlift, and accessory work.</p>
+      </div>
+      <div class="card">
+        <h3>Current PRs</h3>
+        <table>
+          <tbody>
+            <tr><td>Back Squat</td><td class="muted">405 × 3</td><td><span class="badge-pill pr">e1RM 442</span></td></tr>
+            <tr><td>Bench Press</td><td class="muted">265 × 2</td><td><span class="badge-pill pr">e1RM 282</span></td></tr>
+            <tr><td>Deadlift</td><td class="muted">455 × 1</td><td><span class="badge-pill pr">e1RM 455</span></td></tr>
+            <tr><td>Push Press</td><td class="muted">195 × 3</td><td><span class="badge-pill pr">e1RM 215</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <h3>Badge Case</h3>
+      <div class="medallion-grid">
+        <div class="medallion">
+          <div class="medallion-icon">Þ</div>
+          <div class="medallion-name">Thrall</div>
+          <div class="medallion-meta">Earned · Wk 1</div>
+        </div>
+        <div class="medallion">
+          <div class="medallion-icon">K</div>
+          <div class="medallion-name">Karl</div>
+          <div class="medallion-meta">Earned · Wk 2</div>
+        </div>
+        <div class="medallion">
+          <div class="medallion-icon">J</div>
+          <div class="medallion-name">Jarl</div>
+          <div class="medallion-meta">Earned · Wk 3</div>
+        </div>
+        <div class="medallion">
+          <div class="medallion-icon">B</div>
+          <div class="medallion-name">Berserker</div>
+          <div class="medallion-meta">Earned · Wk 4</div>
+        </div>
+        <div class="medallion locked">
+          <div class="medallion-icon">E</div>
+          <div class="medallion-name">Einherjar</div>
+          <div class="medallion-meta">612,400 / 1,000,000 lb</div>
+          <div class="medallion-progress"><div style="width:61%"></div></div>
+        </div>
+        <div class="medallion locked gold">
+          <div class="medallion-icon">V</div>
+          <div class="medallion-name">Valhalla</div>
+          <div class="medallion-meta">612,400 / 5,000,000 lb</div>
+          <div class="medallion-progress"><div style="width:12%"></div></div>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:14px;"><a href="badges.html">View full badge catalog →</a></p>
+    </div>
+
+    <hr class="rune-divider">
+  </main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

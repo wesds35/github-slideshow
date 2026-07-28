@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scheduler · Sanders Strength</title>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="assets/logo.svg" alt="">
+      <div class="brand-name"><b>SANDERS</b><span>STRENGTH</span></div>
+    </div>
+    <nav class="nav-group">
+      <div class="nav-label">Coach</div>
+      <a class="nav-link" href="dashboard.html"><span class="dot"></span> Dashboard</a>
+      <a class="nav-link" href="program-builder.html"><span class="dot"></span> Program Builder</a>
+      <a class="nav-link active" href="scheduler.html"><span class="dot"></span> Scheduler</a>
+      <a class="nav-link" href="badges.html"><span class="dot"></span> Badge Catalog</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-label">Preview As</div>
+      <a class="nav-link" href="athlete.html"><span class="dot"></span> Athlete View</a>
+      <a class="nav-link" href="log-workout.html"><span class="dot"></span> Log Workout</a>
+    </nav>
+    <div class="sidebar-footer">Local-first. Athlete data is never shared or sold. v1.0</div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="eyebrow">Scheduler</div>
+        <h1>Week of July 27</h1>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <select style="width:auto;">
+          <option>All Athletes</option>
+          <option>Varsity Group</option>
+          <option>Erik Halvorsen</option>
+        </select>
+        <button class="btn btn-primary">+ Schedule Session</button>
+      </div>
+    </div>
+
+    <div class="tabs" data-tabs="cal-view">
+      <div class="tab active" data-tab="week">Week</div>
+      <div class="tab" data-tab="month">Month</div>
+    </div>
+
+    <div data-tab-panel="cal-view" data-tab="week">
+      <div class="cal-grid" style="margin-bottom:8px;">
+        <div class="cal-day-name">Mon 27</div>
+        <div class="cal-day-name">Tue 28</div>
+        <div class="cal-day-name">Wed 29</div>
+        <div class="cal-day-name">Thu 30</div>
+        <div class="cal-day-name">Fri 31</div>
+        <div class="cal-day-name">Sat 1</div>
+        <div class="cal-day-name">Sun 2</div>
+      </div>
+      <div class="cal-grid">
+        <div class="cal-cell"><div class="cal-date">27</div>
+          <div class="cal-event done">Lower Power — 11 athletes</div>
+        </div>
+        <div class="cal-cell today"><div class="cal-date">28 · Today</div>
+          <div class="cal-event">Upper Push/Pull — 9</div>
+          <div class="cal-event">Return-to-Play — 1</div>
+        </div>
+        <div class="cal-cell"><div class="cal-date">29</div>
+          <div class="cal-event">Engine Day — 12</div>
+        </div>
+        <div class="cal-cell"><div class="cal-date">30</div>
+          <div class="cal-event">Lower Power — 11</div>
+        </div>
+        <div class="cal-cell"><div class="cal-date">31</div>
+          <div class="cal-event">Upper Push/Pull — 9</div>
+        </div>
+        <div class="cal-cell"><div class="cal-date">1</div>
+          <div class="cal-event missed">Optional Conditioning — 4</div>
+        </div>
+        <div class="cal-cell"><div class="cal-date">2</div>
+          <div class="muted" style="font-size:.72rem;">Rest day</div>
+        </div>
+      </div>
+    </div>
+
+    <div data-tab-panel="cal-view" data-tab="month" style="display:none;">
+      <div class="card">
+        <p class="muted">Month view rolls the same schedule up by week — each cell shows total scheduled sessions and completion rate across the roster. (Mockup: week view shown as the primary reference layout.)</p>
+      </div>
+    </div>
+
+    <hr class="rune-divider">
+    <div class="card">
+      <h3>Today — Detail</h3>
+      <table>
+        <thead><tr><th>Athlete</th><th>Session</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>Erik Halvorsen</td><td class="muted">Upper Push/Pull</td><td><span class="badge-pill">Scheduled</span></td><td><a class="btn btn-ghost btn-sm" href="log-workout.html">Log</a></td></tr>
+          <tr><td>Marcus Kade</td><td class="muted">Upper Push/Pull</td><td><span class="badge-pill" style="background:rgba(76,175,106,.14); color:#4caf6a; border-color:rgba(76,175,106,.35);">Completed</span></td><td><a class="btn btn-ghost btn-sm" href="athlete.html">View</a></td></tr>
+          <tr><td>Devon Price</td><td class="muted">Return-to-Play</td><td><span class="badge-pill">Scheduled</span></td><td><a class="btn btn-ghost btn-sm" href="log-workout.html">Log</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

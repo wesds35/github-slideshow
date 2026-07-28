@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Badge Catalog · Sanders Strength</title>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="assets/logo.svg" alt="">
+      <div class="brand-name"><b>SANDERS</b><span>STRENGTH</span></div>
+    </div>
+    <nav class="nav-group">
+      <div class="nav-label">Coach</div>
+      <a class="nav-link" href="dashboard.html"><span class="dot"></span> Dashboard</a>
+      <a class="nav-link" href="program-builder.html"><span class="dot"></span> Program Builder</a>
+      <a class="nav-link" href="scheduler.html"><span class="dot"></span> Scheduler</a>
+      <a class="nav-link active" href="badges.html"><span class="dot"></span> Badge Catalog</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-label">Preview As</div>
+      <a class="nav-link" href="athlete.html"><span class="dot"></span> Athlete View</a>
+      <a class="nav-link" href="log-workout.html"><span class="dot"></span> Log Workout</a>
+    </nav>
+    <div class="sidebar-footer">Local-first. Athlete data is never shared or sold. v1.0</div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="eyebrow">Badge Catalog</div>
+        <h1>Milestone Tiers</h1>
+      </div>
+      <button class="btn btn-ghost">Edit Thresholds</button>
+    </div>
+
+    <div class="tabs" data-tabs="badge-track">
+      <div class="tab active" data-tab="load">Rep (Load) Volume</div>
+      <div class="tab" data-tab="distance">Distance Volume</div>
+      <div class="tab" data-tab="wattage">Wattage Volume</div>
+    </div>
+
+    <div data-tab-panel="badge-track" data-tab="load">
+      <div class="medallion-grid">
+        <div class="medallion"><div class="medallion-icon">Þ</div><div class="medallion-name">Thrall</div><div class="medallion-meta">10,000 lb</div></div>
+        <div class="medallion"><div class="medallion-icon">K</div><div class="medallion-name">Karl</div><div class="medallion-meta">50,000 lb</div></div>
+        <div class="medallion"><div class="medallion-icon">J</div><div class="medallion-name">Jarl</div><div class="medallion-meta">150,000 lb</div></div>
+        <div class="medallion"><div class="medallion-icon">B</div><div class="medallion-name">Berserker</div><div class="medallion-meta">500,000 lb</div></div>
+        <div class="medallion locked"><div class="medallion-icon">E</div><div class="medallion-name">Einherjar</div><div class="medallion-meta">1,000,000 lb</div></div>
+        <div class="medallion locked gold"><div class="medallion-icon">V</div><div class="medallion-name">Valhalla</div><div class="medallion-meta">5,000,000 lb</div></div>
+      </div>
+    </div>
+
+    <div data-tab-panel="badge-track" data-tab="distance" style="display:none;">
+      <div class="medallion-grid">
+        <div class="medallion"><div class="medallion-icon">Þ</div><div class="medallion-name">Thrall</div><div class="medallion-meta">10 mi</div></div>
+        <div class="medallion"><div class="medallion-icon">K</div><div class="medallion-name">Karl</div><div class="medallion-meta">50 mi</div></div>
+        <div class="medallion locked"><div class="medallion-icon">J</div><div class="medallion-name">Jarl</div><div class="medallion-meta">150 mi</div></div>
+        <div class="medallion locked"><div class="medallion-icon">B</div><div class="medallion-name">Berserker</div><div class="medallion-meta">400 mi</div></div>
+        <div class="medallion locked"><div class="medallion-icon">E</div><div class="medallion-name">Einherjar</div><div class="medallion-meta">1,000 mi</div></div>
+        <div class="medallion locked gold"><div class="medallion-icon">V</div><div class="medallion-name">Valhalla</div><div class="medallion-meta">5,000 mi</div></div>
+      </div>
+    </div>
+
+    <div data-tab-panel="badge-track" data-tab="wattage" style="display:none;">
+      <div class="medallion-grid">
+        <div class="medallion"><div class="medallion-icon">Þ</div><div class="medallion-name">Thrall</div><div class="medallion-meta">500 kJ</div></div>
+        <div class="medallion"><div class="medallion-icon">K</div><div class="medallion-name">Karl</div><div class="medallion-meta">2,000 kJ</div></div>
+        <div class="medallion"><div class="medallion-icon">J</div><div class="medallion-name">Jarl</div><div class="medallion-meta">5,000 kJ</div></div>
+        <div class="medallion locked"><div class="medallion-icon">B</div><div class="medallion-name">Berserker</div><div class="medallion-meta">15,000 kJ</div></div>
+        <div class="medallion locked"><div class="medallion-icon">E</div><div class="medallion-name">Einherjar</div><div class="medallion-meta">40,000 kJ</div></div>
+        <div class="medallion locked gold"><div class="medallion-icon">V</div><div class="medallion-name">Valhalla</div><div class="medallion-meta">150,000 kJ</div></div>
+      </div>
+    </div>
+
+    <hr class="rune-divider">
+    <p class="muted" style="max-width:640px;">Thresholds are configurable per roster (youth / collegiate / pro) by the coach. Badges are permanent once earned and track separately per volume type, plus per-lift for signature exercises.</p>
+  </main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

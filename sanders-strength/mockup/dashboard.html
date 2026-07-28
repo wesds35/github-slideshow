@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coach Dashboard · Sanders Strength</title>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="assets/logo.svg" alt="">
+      <div class="brand-name"><b>SANDERS</b><span>STRENGTH</span></div>
+    </div>
+    <nav class="nav-group">
+      <div class="nav-label">Coach</div>
+      <a class="nav-link active" href="dashboard.html"><span class="dot"></span> Dashboard</a>
+      <a class="nav-link" href="program-builder.html"><span class="dot"></span> Program Builder</a>
+      <a class="nav-link" href="scheduler.html"><span class="dot"></span> Scheduler</a>
+      <a class="nav-link" href="badges.html"><span class="dot"></span> Badge Catalog</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-label">Preview As</div>
+      <a class="nav-link" href="athlete.html"><span class="dot"></span> Athlete View</a>
+      <a class="nav-link" href="log-workout.html"><span class="dot"></span> Log Workout</a>
+    </nav>
+    <div class="sidebar-footer">Local-first. Athlete data is never shared or sold. v1.0</div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="eyebrow">Coach Dashboard</div>
+        <h1>Roster Overview</h1>
+      </div>
+      <div class="user-chip"><div class="avatar">CS</div> Coach Sanders</div>
+    </div>
+
+    <div class="grid grid-4" style="margin-bottom:20px;">
+      <div class="card stat-card">
+        <div class="stat-label">Team Volume — 7d</div>
+        <div class="stat-value">412,850 <span style="font-size:.9rem;color:var(--text-faint);">lb</span></div>
+        <div class="stat-delta up">12% vs last week</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-label">Active Athletes</div>
+        <div class="stat-value">18</div>
+        <div class="stat-delta up">2 new this month</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-label">Sessions Completed</div>
+        <div class="stat-value">64 / 72</div>
+        <div class="stat-delta down">89% adherence</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-label">Badges Earned — 7d</div>
+        <div class="stat-value">7</div>
+        <div class="stat-delta up">incl. 1 Einherjar</div>
+      </div>
+    </div>
+
+    <div class="grid grid-2" style="margin-bottom:20px; align-items:start;">
+      <div class="card">
+        <h3>Team Volume Trend (weeks)</h3>
+        <div class="bars">
+          <div class="bar-col"><div class="bar" style="height:52%"></div><div class="bar-label">W1</div></div>
+          <div class="bar-col"><div class="bar" style="height:61%"></div><div class="bar-label">W2</div></div>
+          <div class="bar-col"><div class="bar" style="height:58%"></div><div class="bar-label">W3</div></div>
+          <div class="bar-col"><div class="bar" style="height:74%"></div><div class="bar-label">W4</div></div>
+          <div class="bar-col"><div class="bar" style="height:69%"></div><div class="bar-label">W5</div></div>
+          <div class="bar-col"><div class="bar" style="height:88%"></div><div class="bar-label">W6</div></div>
+          <div class="bar-col"><div class="bar" style="height:100%"></div><div class="bar-label">W7</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Recent PRs</h3>
+        <table>
+          <tbody>
+            <tr><td>Erik Halvorsen</td><td class="muted">Back Squat</td><td><span class="badge-pill pr">405×3</span></td></tr>
+            <tr><td>Marcus Kade</td><td class="muted">Bench Press</td><td><span class="badge-pill pr">275×5</span></td></tr>
+            <tr><td>Astrid Lund</td><td class="muted">Deadlift</td><td><span class="badge-pill pr">365×1</span></td></tr>
+            <tr><td>Devon Price</td><td class="muted">Push Press</td><td><span class="badge-pill pr">205×2</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Athlete Roster</h3>
+      <table>
+        <thead>
+          <tr><th>Athlete</th><th>Program</th><th>Last Session</th><th>7d Volume</th><th>Latest Badge</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Erik Halvorsen</td><td class="muted">Off-Season Strength Block</td><td class="muted">Yesterday</td><td>38,200 lb</td>
+            <td><span class="badge-pill">Berserker</span></td><td><a class="btn btn-ghost btn-sm" href="athlete.html">View</a></td>
+          </tr>
+          <tr>
+            <td>Astrid Lund</td><td class="muted">In-Season Maintenance</td><td class="muted">Today</td><td>29,750 lb</td>
+            <td><span class="badge-pill gold">Valhalla</span></td><td><a class="btn btn-ghost btn-sm" href="athlete.html">View</a></td>
+          </tr>
+          <tr>
+            <td>Marcus Kade</td><td class="muted">Off-Season Strength Block</td><td class="muted">2 days ago</td><td>24,900 lb</td>
+            <td><span class="badge-pill">Jarl</span></td><td><a class="btn btn-ghost btn-sm" href="athlete.html">View</a></td>
+          </tr>
+          <tr>
+            <td>Devon Price</td><td class="muted">Return-to-Play</td><td class="muted">Today</td><td>11,300 lb</td>
+            <td><span class="badge-pill">Karl</span></td><td><a class="btn btn-ghost btn-sm" href="athlete.html">View</a></td>
+          </tr>
+          <tr>
+            <td>Nadia Okafor</td><td class="muted">Off-Season Strength Block</td><td class="muted">3 days ago</td><td>19,650 lb</td>
+            <td><span class="badge-pill">Jarl</span></td><td><a class="btn btn-ghost btn-sm" href="athlete.html">View</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr class="rune-divider">
+  </main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>
