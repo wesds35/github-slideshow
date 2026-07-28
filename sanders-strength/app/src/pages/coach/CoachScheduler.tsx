@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
 import { Link } from "react-router-dom";
-import { db } from "../../db";
+import { supabase } from "../../lib/supabaseClient";
+import { toScheduledSession } from "../../lib/mappers";
+import { useSupabaseData } from "../../lib/useSupabaseData";
 import { Topbar } from "../../components/Topbar";
 import { enrichSessions, groupByDayLabel, weekDates, type SessionInfo } from "../../lib/scheduler";
 
@@ -18,10 +19,11 @@ export function CoachScheduler() {
   const dates = useMemo(() => weekDates(anchor), [anchor]);
   const today = new Date().toISOString().slice(0, 10);
 
-  const infos = useLiveQuery(
+  const infos = useSupabaseData(
     async () => {
-      const sessions = await db.scheduledSessions.where("date").anyOf(dates).toArray();
-      return enrichSessions(sessions);
+      const { data, error } = await supabase.from("scheduled_sessions").select().in("date", dates);
+      if (error) throw error;
+      return enrichSessions((data ?? []).map(toScheduledSession));
     },
     [dates.join(",")],
   ) ?? [];

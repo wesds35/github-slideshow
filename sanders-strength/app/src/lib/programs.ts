@@ -1,13 +1,19 @@
+import { supabase } from "./supabaseClient";
 import {
-  db,
-  uid,
-  type Program,
-  type ProgramWeek,
-  type ProgramDay,
-  type ProgramExercise,
-  type Assignment,
-  type ScheduledSession,
-  type VolumeTrack,
+  toProgram,
+  toProgramWeek,
+  toProgramDay,
+  toProgramExercise,
+  toAssignment,
+} from "./mappers";
+import type {
+  Program,
+  ProgramWeek,
+  ProgramDay,
+  ProgramExercise,
+  Assignment,
+  ScheduledSession,
+  VolumeTrack,
 } from "../db";
 
 export interface ExerciseSpec {
@@ -37,55 +43,49 @@ export interface ProgramSpec {
 
 /** Persists a full program tree (weeks -> days -> exercises) in one pass. */
 export async function createProgram(spec: ProgramSpec): Promise<Program> {
-  const program: Program = {
-    id: uid(),
-    name: spec.name,
-    durationWeeks: spec.durationWeeks,
-    tags: spec.tags,
-    createdAt: Date.now(),
-  };
+  const { data: programRow, error: programError } = await supabase
+    .from("programs")
+    .insert({ name: spec.name, duration_weeks: spec.durationWeeks, tags: spec.tags })
+    .select()
+    .single();
+  if (programError) throw programError;
 
-  const weeks: ProgramWeek[] = [];
-  const days: ProgramDay[] = [];
-  const exercises: ProgramExercise[] = [];
+  for (let weekIdx = 0; weekIdx < spec.weeks.length; weekIdx++) {
+    const { data: weekRow, error: weekError } = await supabase
+      .from("program_weeks")
+      .insert({ program_id: programRow.id, week_number: weekIdx + 1 })
+      .select()
+      .single();
+    if (weekError) throw weekError;
 
-  spec.weeks.forEach((weekSpec, weekIdx) => {
-    const week: ProgramWeek = { id: uid(), programId: program.id, weekNumber: weekIdx + 1 };
-    weeks.push(week);
-    weekSpec.days.forEach((daySpec, dayIdx) => {
-      const day: ProgramDay = { id: uid(), weekId: week.id, label: daySpec.label, order: dayIdx };
-      days.push(day);
-      daySpec.exercises.forEach((exSpec, exIdx) => {
-        exercises.push({
-          id: uid(),
-          dayId: day.id,
-          name: exSpec.name,
-          track: exSpec.track,
-          prescribedSets: exSpec.prescribedSets,
-          prescribedReps: exSpec.prescribedReps,
-          prescriptionNote: exSpec.prescriptionNote,
-          restNote: exSpec.restNote,
-          order: exIdx,
-        });
-      });
-    });
-  });
+    const daySpecs = spec.weeks[weekIdx].days;
+    for (let dayIdx = 0; dayIdx < daySpecs.length; dayIdx++) {
+      const { data: dayRow, error: dayError } = await supabase
+        .from("program_days")
+        .insert({ program_id: programRow.id, week_id: weekRow.id, label: daySpecs[dayIdx].label, order: dayIdx })
+        .select()
+        .single();
+      if (dayError) throw dayError;
 
-  await db.transaction(
-    "rw",
-    db.programs,
-    db.programWeeks,
-    db.programDays,
-    db.programExercises,
-    async () => {
-      await db.programs.add(program);
-      await db.programWeeks.bulkAdd(weeks);
-      await db.programDays.bulkAdd(days);
-      await db.programExercises.bulkAdd(exercises);
-    },
-  );
+      const exercises = daySpecs[dayIdx].exercises.map((ex, exIdx) => ({
+        program_id: programRow.id,
+        day_id: dayRow.id,
+        name: ex.name,
+        track: ex.track,
+        prescribed_sets: ex.prescribedSets,
+        prescribed_reps: ex.prescribedReps,
+        prescription_note: ex.prescriptionNote,
+        rest_note: ex.restNote,
+        order: exIdx,
+      }));
+      if (exercises.length > 0) {
+        const { error: exError } = await supabase.from("program_exercises").insert(exercises);
+        if (exError) throw exError;
+      }
+    }
+  }
 
-  return program;
+  return toProgram(programRow);
 }
 
 function addDays(iso: string, days: number): string {
@@ -104,42 +104,168 @@ export async function assignProgramToAthlete(
   athleteId: string,
   startDate: string,
 ): Promise<Assignment> {
-  const assignment: Assignment = {
-    id: uid(),
-    programId,
-    athleteId,
-    startDate,
-    createdAt: Date.now(),
-  };
+  const { data: assignmentRow, error: assignmentError } = await supabase
+    .from("assignments")
+    .insert({ program_id: programId, athlete_id: athleteId, start_date: startDate })
+    .select()
+    .single();
+  if (assignmentError) throw assignmentError;
 
-  const weeks = (await db.programWeeks.where("programId").equals(programId).toArray()).sort(
-    (a, b) => a.weekNumber - b.weekNumber,
-  );
+  const { data: weekRows, error: weeksError } = await supabase
+    .from("program_weeks")
+    .select("id, week_number")
+    .eq("program_id", programId)
+    .order("week_number");
+  if (weeksError) throw weeksError;
 
-  const sessions: ScheduledSession[] = [];
-  for (const week of weeks) {
-    const weekStart = addDays(startDate, (week.weekNumber - 1) * 7);
-    const days = (await db.programDays.where("weekId").equals(week.id).toArray()).sort(
-      (a, b) => a.order - b.order,
-    );
-    days.forEach((day, i) => {
+  const sessions: Array<{
+    assignment_id: string;
+    athlete_id: string;
+    day_id: string;
+    date: string;
+  }> = [];
+
+  for (const week of weekRows) {
+    const weekStart = addDays(startDate, (week.week_number - 1) * 7);
+    const { data: dayRows, error: daysError } = await supabase
+      .from("program_days")
+      .select("id, order")
+      .eq("week_id", week.id)
+      .order("order");
+    if (daysError) throw daysError;
+
+    dayRows.forEach((day, i) => {
       sessions.push({
-        id: uid(),
-        assignmentId: assignment.id,
-        athleteId,
-        dayId: day.id,
+        assignment_id: assignmentRow.id,
+        athlete_id: athleteId,
+        day_id: day.id,
         date: addDays(weekStart, i * 2),
-        status: "scheduled",
       });
     });
   }
 
-  await db.transaction("rw", db.assignments, db.scheduledSessions, async () => {
-    await db.assignments.add(assignment);
-    await db.scheduledSessions.bulkAdd(sessions);
-  });
+  if (sessions.length > 0) {
+    const { error: sessionsError } = await supabase.from("scheduled_sessions").insert(sessions);
+    if (sessionsError) throw sessionsError;
+  }
 
-  return assignment;
+  return toAssignment(assignmentRow);
+}
+
+export async function programDayDetail(dayId: string): Promise<{ day: ProgramDay | undefined; exercises: ProgramExercise[] }> {
+  const [{ data: dayRow }, { data: exerciseRows, error: exError }] = await Promise.all([
+    supabase.from("program_days").select().eq("id", dayId).maybeSingle(),
+    supabase.from("program_exercises").select().eq("day_id", dayId).order("order"),
+  ]);
+  if (exError) throw exError;
+  return {
+    day: dayRow ? toProgramDay(dayRow) : undefined,
+    exercises: (exerciseRows ?? []).map(toProgramExercise),
+  };
+}
+
+export async function markSessionStatus(sessionId: string, status: ScheduledSession["status"]): Promise<void> {
+  const { error } = await supabase.from("scheduled_sessions").update({ status }).eq("id", sessionId);
+  if (error) throw error;
+}
+
+export async function addWeek(programId: string): Promise<ProgramWeek> {
+  const { count } = await supabase
+    .from("program_weeks")
+    .select("id", { count: "exact", head: true })
+    .eq("program_id", programId);
+  const { data, error } = await supabase
+    .from("program_weeks")
+    .insert({ program_id: programId, week_number: (count ?? 0) + 1 })
+    .select()
+    .single();
+  if (error) throw error;
+  return toProgramWeek(data);
+}
+
+export async function addDay(weekId: string, label: string): Promise<ProgramDay> {
+  const { data: week, error: weekError } = await supabase
+    .from("program_weeks")
+    .select("program_id")
+    .eq("id", weekId)
+    .single();
+  if (weekError) throw weekError;
+
+  const { count } = await supabase.from("program_days").select("id", { count: "exact", head: true }).eq("week_id", weekId);
+  const { data, error } = await supabase
+    .from("program_days")
+    .insert({ program_id: week.program_id, week_id: weekId, label, order: count ?? 0 })
+    .select()
+    .single();
+  if (error) throw error;
+  return toProgramDay(data);
+}
+
+export async function addExercise(dayId: string, spec: ExerciseSpec): Promise<ProgramExercise> {
+  const { data: day, error: dayError } = await supabase
+    .from("program_days")
+    .select("program_id")
+    .eq("id", dayId)
+    .single();
+  if (dayError) throw dayError;
+
+  const { count } = await supabase.from("program_exercises").select("id", { count: "exact", head: true }).eq("day_id", dayId);
+  const { data, error } = await supabase
+    .from("program_exercises")
+    .insert({
+      program_id: day.program_id,
+      day_id: dayId,
+      order: count ?? 0,
+      name: spec.name,
+      track: spec.track,
+      prescribed_sets: spec.prescribedSets,
+      prescribed_reps: spec.prescribedReps,
+      prescription_note: spec.prescriptionNote,
+      rest_note: spec.restNote,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return toProgramExercise(data);
+}
+
+export async function updateExercise(exerciseId: string, patch: Partial<ExerciseSpec>): Promise<void> {
+  const { error } = await supabase
+    .from("program_exercises")
+    .update({
+      name: patch.name,
+      track: patch.track,
+      prescribed_sets: patch.prescribedSets,
+      prescribed_reps: patch.prescribedReps,
+      prescription_note: patch.prescriptionNote,
+      rest_note: patch.restNote,
+    })
+    .eq("id", exerciseId);
+  if (error) throw error;
+}
+
+export async function deleteExercise(exerciseId: string): Promise<void> {
+  const { error } = await supabase.from("program_exercises").delete().eq("id", exerciseId);
+  if (error) throw error;
+}
+
+export async function deleteDay(dayId: string): Promise<void> {
+  // program_exercises has ON DELETE CASCADE from program_days, so deleting the day is enough.
+  const { error } = await supabase.from("program_days").delete().eq("id", dayId);
+  if (error) throw error;
+}
+
+export async function deleteWeek(weekId: string): Promise<void> {
+  // program_days (and, cascading, program_exercises) delete automatically via ON DELETE CASCADE.
+  const { error } = await supabase.from("program_weeks").delete().eq("id", weekId);
+  if (error) throw error;
+}
+
+export async function deleteProgram(programId: string): Promise<void> {
+  // Every child table (weeks, days, exercises, assignments, scheduled_sessions, logged_sets)
+  // cascades from programs via ON DELETE CASCADE foreign keys.
+  const { error } = await supabase.from("programs").delete().eq("id", programId);
+  if (error) throw error;
 }
 
 export interface DayNode {
@@ -153,114 +279,34 @@ export interface WeekNode {
 }
 
 export async function programTree(programId: string): Promise<WeekNode[]> {
-  const weeks = (await db.programWeeks.where("programId").equals(programId).toArray()).sort(
-    (a, b) => a.weekNumber - b.weekNumber,
-  );
+  const [{ data: weekRows, error: weeksError }, { data: dayRows, error: daysError }, { data: exerciseRows, error: exError }] =
+    await Promise.all([
+      supabase.from("program_weeks").select().eq("program_id", programId).order("week_number"),
+      supabase.from("program_days").select().eq("program_id", programId).order("order"),
+      supabase.from("program_exercises").select().eq("program_id", programId).order("order"),
+    ]);
+  if (weeksError) throw weeksError;
+  if (daysError) throw daysError;
+  if (exError) throw exError;
 
-  const weekNodes: WeekNode[] = [];
-  for (const week of weeks) {
-    const days = (await db.programDays.where("weekId").equals(week.id).toArray()).sort((a, b) => a.order - b.order);
-    const dayNodes: DayNode[] = [];
-    for (const day of days) {
-      const exercises = (await db.programExercises.where("dayId").equals(day.id).toArray()).sort(
-        (a, b) => a.order - b.order,
-      );
-      dayNodes.push({ day, exercises });
-    }
-    weekNodes.push({ week, days: dayNodes });
+  const daysByWeek = new Map<string, typeof dayRows>();
+  for (const day of dayRows ?? []) {
+    const list = daysByWeek.get(day.week_id) ?? [];
+    list.push(day);
+    daysByWeek.set(day.week_id, list);
   }
-  return weekNodes;
-}
+  const exercisesByDay = new Map<string, typeof exerciseRows>();
+  for (const ex of exerciseRows ?? []) {
+    const list = exercisesByDay.get(ex.day_id) ?? [];
+    list.push(ex);
+    exercisesByDay.set(ex.day_id, list);
+  }
 
-export async function programDayDetail(dayId: string) {
-  const day = await db.programDays.get(dayId);
-  const exercises = (await db.programExercises.where("dayId").equals(dayId).toArray()).sort(
-    (a, b) => a.order - b.order,
-  );
-  return { day, exercises };
-}
-
-export async function markSessionStatus(sessionId: string, status: ScheduledSession["status"]) {
-  await db.scheduledSessions.update(sessionId, { status });
-}
-
-export async function addWeek(programId: string): Promise<ProgramWeek> {
-  const existing = await db.programWeeks.where("programId").equals(programId).toArray();
-  const week: ProgramWeek = { id: uid(), programId, weekNumber: existing.length + 1 };
-  await db.programWeeks.add(week);
-  return week;
-}
-
-export async function addDay(weekId: string, label: string): Promise<ProgramDay> {
-  const existing = await db.programDays.where("weekId").equals(weekId).toArray();
-  const day: ProgramDay = { id: uid(), weekId, label, order: existing.length };
-  await db.programDays.add(day);
-  return day;
-}
-
-export async function addExercise(dayId: string, spec: ExerciseSpec): Promise<ProgramExercise> {
-  const existing = await db.programExercises.where("dayId").equals(dayId).toArray();
-  const exercise: ProgramExercise = {
-    id: uid(),
-    dayId,
-    order: existing.length,
-    name: spec.name,
-    track: spec.track,
-    prescribedSets: spec.prescribedSets,
-    prescribedReps: spec.prescribedReps,
-    prescriptionNote: spec.prescriptionNote,
-    restNote: spec.restNote,
-  };
-  await db.programExercises.add(exercise);
-  return exercise;
-}
-
-export async function updateExercise(exerciseId: string, patch: Partial<ExerciseSpec>): Promise<void> {
-  await db.programExercises.update(exerciseId, patch);
-}
-
-export async function deleteExercise(exerciseId: string): Promise<void> {
-  await db.programExercises.delete(exerciseId);
-}
-
-export async function deleteDay(dayId: string): Promise<void> {
-  await db.transaction("rw", db.programDays, db.programExercises, async () => {
-    await db.programExercises.where("dayId").equals(dayId).delete();
-    await db.programDays.delete(dayId);
-  });
-}
-
-export async function deleteWeek(weekId: string): Promise<void> {
-  const days = await db.programDays.where("weekId").equals(weekId).toArray();
-  await db.transaction("rw", db.programWeeks, db.programDays, db.programExercises, async () => {
-    for (const day of days) {
-      await db.programExercises.where("dayId").equals(day.id).delete();
-    }
-    await db.programDays.where("weekId").equals(weekId).delete();
-    await db.programWeeks.delete(weekId);
-  });
-}
-
-export async function deleteProgram(programId: string): Promise<void> {
-  const weeks = await db.programWeeks.where("programId").equals(programId).toArray();
-  await db.transaction(
-    "rw",
-    [db.programs, db.programWeeks, db.programDays, db.programExercises, db.assignments, db.scheduledSessions],
-    async () => {
-      for (const week of weeks) {
-        const days = await db.programDays.where("weekId").equals(week.id).toArray();
-        for (const day of days) {
-          await db.programExercises.where("dayId").equals(day.id).delete();
-        }
-        await db.programDays.where("weekId").equals(week.id).delete();
-      }
-      await db.programWeeks.where("programId").equals(programId).delete();
-      const assignments = await db.assignments.where("programId").equals(programId).toArray();
-      for (const a of assignments) {
-        await db.scheduledSessions.where("assignmentId").equals(a.id).delete();
-      }
-      await db.assignments.where("programId").equals(programId).delete();
-      await db.programs.delete(programId);
-    },
-  );
+  return (weekRows ?? []).map((week) => ({
+    week: toProgramWeek(week),
+    days: (daysByWeek.get(week.id) ?? []).map((day) => ({
+      day: toProgramDay(day),
+      exercises: (exercisesByDay.get(day.id) ?? []).map(toProgramExercise),
+    })),
+  }));
 }

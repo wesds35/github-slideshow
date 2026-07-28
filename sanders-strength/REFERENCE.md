@@ -4,7 +4,7 @@ This document is the single source of truth for the Sanders Strength workout-tra
 
 Mockup (static, visual reference only): `sanders-strength/mockup/index.html` (open any `.html` file in the folder directly in a browser, no build step required).
 
-Functional app (real, local-first, data-backed): `sanders-strength/app` — a Vite + React + TypeScript app with all data in IndexedDB. See `sanders-strength/app/README.md` for how to run it and what's real vs. simulated in this version.
+Functional app (real, deployable, data-backed): `sanders-strength/app` — a Vite + React + TypeScript app on Supabase (Postgres + Auth), with row-level security enforcing that an athlete's data is only ever visible to them and their coach. See `sanders-strength/app/README.md` for what's built, and `sanders-strength/app/README-DEPLOY.md` for the path to a public URL.
 
 ---
 
@@ -113,7 +113,7 @@ On save: volume is computed for the set, rolled into session/lift/lifetime total
 ## 9. Privacy Model
 
 - No athlete data is shared across athletes, and nothing is shared to third parties.
-- Data is local-first: stored on-device / within the coach's own system, syncing only between a given athlete and their own coach.
+- Enforced at the database, not just the app: an athlete's Postgres session can only read/write rows tied to their own account (Supabase row-level security), and a coach's roster is scoped to the athletes they've added. A bug in the frontend can't leak one athlete's data to another.
 - No public leaderboards or cross-team visibility in v1.0.
 
 ---

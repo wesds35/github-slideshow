@@ -1,28 +1,33 @@
 import { useMemo, useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
 import { useNavigate } from "react-router-dom";
-import { db } from "../../db";
+import { supabase } from "../../lib/supabaseClient";
+import { toScheduledSession } from "../../lib/mappers";
+import { useSupabaseData } from "../../lib/useSupabaseData";
 import { Topbar } from "../../components/Topbar";
-import { useIdentity } from "../../context/identity";
+import { useAuth } from "../../context/auth";
 import { enrichSessions, weekDates } from "../../lib/scheduler";
 
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export function AthleteSchedule() {
-  const { athleteId } = useIdentity();
+  const { athlete } = useAuth();
+  const athleteId = athlete?.id;
   const navigate = useNavigate();
   const [anchor, setAnchor] = useState(() => new Date());
   const dates = useMemo(() => weekDates(anchor), [anchor]);
   const today = new Date().toISOString().slice(0, 10);
 
-  const infos = useLiveQuery(
+  const infos = useSupabaseData(
     async () => {
       if (!athleteId) return [];
-      const sessions = await db.scheduledSessions
-        .where("[athleteId+date]")
-        .between([athleteId, dates[0]], [athleteId, dates[6]], true, true)
-        .toArray();
-      return enrichSessions(sessions);
+      const { data, error } = await supabase
+        .from("scheduled_sessions")
+        .select()
+        .eq("athlete_id", athleteId)
+        .gte("date", dates[0])
+        .lte("date", dates[6]);
+      if (error) throw error;
+      return enrichSessions((data ?? []).map(toScheduledSession));
     },
     [athleteId, dates.join(",")],
   ) ?? [];

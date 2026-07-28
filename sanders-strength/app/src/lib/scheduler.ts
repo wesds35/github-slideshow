@@ -1,4 +1,5 @@
-import { db, type ScheduledSession, type SessionStatus } from "../db";
+import { supabase } from "./supabaseClient";
+import type { ScheduledSession, SessionStatus } from "../db";
 
 export function startOfWeek(date: Date): Date {
   const day = (date.getDay() + 6) % 7; // Monday = 0
@@ -26,12 +27,14 @@ export interface SessionInfo {
 export async function enrichSessions(sessions: ScheduledSession[]): Promise<SessionInfo[]> {
   const dayIds = [...new Set(sessions.map((s) => s.dayId))];
   const athleteIds = [...new Set(sessions.map((s) => s.athleteId))];
-  const [days, athletes] = await Promise.all([
-    db.programDays.bulkGet(dayIds),
-    db.athletes.bulkGet(athleteIds),
+  const [{ data: days, error: daysError }, { data: athletes, error: athletesError }] = await Promise.all([
+    supabase.from("program_days").select("id, label").in("id", dayIds),
+    supabase.from("athletes").select("id, name").in("id", athleteIds),
   ]);
-  const labelByDayId = new Map(days.filter(Boolean).map((d) => [d!.id, d!.label]));
-  const nameByAthleteId = new Map(athletes.filter(Boolean).map((a) => [a!.id, a!.name]));
+  if (daysError) throw daysError;
+  if (athletesError) throw athletesError;
+  const labelByDayId = new Map((days ?? []).map((d) => [d.id, d.label]));
+  const nameByAthleteId = new Map((athletes ?? []).map((a) => [a.id, a.name]));
 
   return sessions.map((session) => ({
     session,

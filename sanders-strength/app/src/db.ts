@@ -1,12 +1,16 @@
-import Dexie, { type EntityTable } from "dexie";
+// Domain types used throughout the app. These are intentionally camelCase, independent of
+// Postgres's snake_case column names — each lib/*.ts data-access function maps rows to these
+// shapes at the boundary, so page components never deal with the wire format directly.
 
 export type VolumeTrack = "load" | "distance" | "wattage";
 export type SessionStatus = "scheduled" | "completed" | "missed";
 
 export interface Athlete {
   id: string;
+  userId: string | null;
   name: string;
   initials: string;
+  email: string;
   createdAt: number;
 }
 
@@ -93,31 +97,3 @@ export interface EarnedBadge {
   badgeDefinitionId: string;
   earnedAt: number;
 }
-
-export const db = new Dexie("sanders-strength") as Dexie & {
-  athletes: EntityTable<Athlete, "id">;
-  programs: EntityTable<Program, "id">;
-  programWeeks: EntityTable<ProgramWeek, "id">;
-  programDays: EntityTable<ProgramDay, "id">;
-  programExercises: EntityTable<ProgramExercise, "id">;
-  assignments: EntityTable<Assignment, "id">;
-  scheduledSessions: EntityTable<ScheduledSession, "id">;
-  loggedSets: EntityTable<LoggedSet, "id">;
-  badgeDefinitions: EntityTable<BadgeDefinition, "id">;
-  earnedBadges: EntityTable<EarnedBadge, "id">;
-};
-
-db.version(1).stores({
-  athletes: "id, name",
-  programs: "id, name, createdAt",
-  programWeeks: "id, programId, [programId+weekNumber]",
-  programDays: "id, weekId, order",
-  programExercises: "id, dayId, order",
-  assignments: "id, programId, athleteId",
-  scheduledSessions: "id, assignmentId, athleteId, date, [athleteId+date]",
-  loggedSets: "id, sessionId, athleteId, exerciseId, exerciseName, [athleteId+exerciseName]",
-  badgeDefinitions: "id, track, tier",
-  earnedBadges: "id, athleteId, badgeDefinitionId, [athleteId+badgeDefinitionId]",
-});
-
-export const uid = (): string => crypto.randomUUID();

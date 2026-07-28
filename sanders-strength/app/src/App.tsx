@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
 import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
-import { IdentityProvider } from "./context/identity";
-import { seedDemoDataIfEmpty } from "./lib/seed";
-import { Splash } from "./pages/Splash";
+import { AuthProvider } from "./context/auth";
+import { Gate } from "./pages/Gate";
+import { Login } from "./pages/Login";
+import { SignUp } from "./pages/SignUp";
 import { CoachShell, AthleteShell } from "./components/AppShell";
 import { CoachDashboard } from "./pages/coach/CoachDashboard";
 import { ProgramList } from "./pages/coach/ProgramList";
@@ -16,19 +16,13 @@ import { LogWorkout } from "./pages/athlete/LogWorkout";
 import { AthleteBadges } from "./pages/athlete/AthleteBadges";
 
 function App() {
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    seedDemoDataIfEmpty().finally(() => setReady(true));
-  }, []);
-
-  if (!ready) return null;
-
   return (
-    <IdentityProvider>
+    <AuthProvider>
       <HashRouter>
         <Routes>
-          <Route path="/" element={<Splash />} />
+          <Route path="/" element={<Gate />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
 
           <Route path="/coach" element={<CoachShell />}>
             <Route path="dashboard" element={<CoachDashboard />} />
@@ -51,7 +45,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </HashRouter>
-    </IdentityProvider>
+    </AuthProvider>
   );
 }
 

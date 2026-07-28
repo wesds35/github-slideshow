@@ -1,14 +1,26 @@
 import { useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
 import { useNavigate } from "react-router-dom";
-import { db, uid } from "../../db";
+import { supabase } from "../../lib/supabaseClient";
+import { toProgram, toAssignment } from "../../lib/mappers";
+import { useSupabaseData } from "../../lib/useSupabaseData";
 import { Topbar } from "../../components/Topbar";
 import { Modal } from "../../components/Modal";
 
 export function ProgramList() {
   const navigate = useNavigate();
-  const programs = useLiveQuery(() => db.programs.orderBy("createdAt").reverse().toArray(), []) ?? [];
-  const assignments = useLiveQuery(() => db.assignments.toArray(), []) ?? [];
+
+  const programs = useSupabaseData(async () => {
+    const { data, error } = await supabase.from("programs").select().order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(toProgram);
+  }, []) ?? [];
+
+  const assignments = useSupabaseData(async () => {
+    const { data, error } = await supabase.from("assignments").select();
+    if (error) throw error;
+    return (data ?? []).map(toAssignment);
+  }, []) ?? [];
+
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [durationWeeks, setDurationWeeks] = useState(8);
@@ -18,13 +30,17 @@ export function ProgramList() {
 
   const createEmptyProgram = async () => {
     if (!name.trim()) return;
-    const program = { id: uid(), name: name.trim(), durationWeeks, tags: tags.trim(), createdAt: Date.now() };
-    await db.programs.add(program);
+    const { data, error } = await supabase
+      .from("programs")
+      .insert({ name: name.trim(), duration_weeks: durationWeeks, tags: tags.trim() })
+      .select()
+      .single();
+    if (error) throw error;
     setCreating(false);
     setName("");
     setDurationWeeks(8);
     setTags("");
-    navigate(`/coach/programs/${program.id}`);
+    navigate(`/coach/programs/${data.id}`);
   };
 
   return (

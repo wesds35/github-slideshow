@@ -1,11 +1,12 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { ToastHost } from "./ToastHost";
-import { useIdentity } from "../context/identity";
+import { useAuth } from "../context/auth";
 
 export function CoachShell() {
-  const { role } = useIdentity();
-  if (role !== "coach") return <Navigate to="/" replace />;
+  const { loading, session, role } = useAuth();
+  if (loading) return null;
+  if (!session || role !== "coach") return <Navigate to="/" replace />;
 
   return (
     <div className="app-shell">
@@ -19,8 +20,9 @@ export function CoachShell() {
 }
 
 export function AthleteShell() {
-  const { role, athleteId } = useIdentity();
-  if (role !== "athlete" || !athleteId) return <Navigate to="/" replace />;
+  const { loading, session, role, athlete } = useAuth();
+  if (loading) return null;
+  if (!session || role !== "athlete" || !athlete) return <Navigate to="/" replace />;
 
   return (
     <div className="app-shell">

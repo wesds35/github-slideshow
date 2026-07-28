@@ -1,21 +1,54 @@
-import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "../db";
+import { Link } from "react-router-dom";
+import { supabase } from "../lib/supabaseClient";
+import { toAthlete, toLoggedSet, toScheduledSession, toProgram } from "../lib/mappers";
+import { useSupabaseData } from "../lib/useSupabaseData";
 import { Topbar } from "../components/Topbar";
 import { BadgeCase } from "../components/BadgeCase";
 import { adherence, weeklyLoadVolumeTrend } from "../lib/dashboard";
 import { badgeStatusesForAthlete } from "../lib/badges";
 import { currentPRsForAthlete } from "../lib/prs";
 import { formatVolume } from "../lib/volume";
-import { Link } from "react-router-dom";
 
 export function AthleteDashboardView({ athleteId, badgesPath }: { athleteId: string; badgesPath: string }) {
-  const athlete = useLiveQuery(() => db.athletes.get(athleteId), [athleteId]);
-  const sets = useLiveQuery(() => db.loggedSets.where("athleteId").equals(athleteId).toArray(), [athleteId]) ?? [];
-  const sessions = useLiveQuery(() => db.scheduledSessions.where("athleteId").equals(athleteId).toArray(), [athleteId]) ?? [];
-  const loadBadges = useLiveQuery(() => badgeStatusesForAthlete(athleteId, "load"), [athleteId]) ?? [];
-  const prs = useLiveQuery(() => currentPRsForAthlete(athleteId), [athleteId]) ?? [];
-  const assignment = useLiveQuery(() => db.assignments.where("athleteId").equals(athleteId).last(), [athleteId]);
-  const program = useLiveQuery(() => (assignment ? db.programs.get(assignment.programId) : undefined), [assignment]);
+  const athlete = useSupabaseData(async () => {
+    const { data, error } = await supabase.from("athletes").select().eq("id", athleteId).maybeSingle();
+    if (error) throw error;
+    return data ? toAthlete(data) : undefined;
+  }, [athleteId]);
+
+  const sets = useSupabaseData(async () => {
+    const { data, error } = await supabase.from("logged_sets").select().eq("athlete_id", athleteId);
+    if (error) throw error;
+    return (data ?? []).map(toLoggedSet);
+  }, [athleteId]) ?? [];
+
+  const sessions = useSupabaseData(async () => {
+    const { data, error } = await supabase.from("scheduled_sessions").select().eq("athlete_id", athleteId);
+    if (error) throw error;
+    return (data ?? []).map(toScheduledSession);
+  }, [athleteId]) ?? [];
+
+  const loadBadges = useSupabaseData(() => badgeStatusesForAthlete(athleteId, "load"), [athleteId]) ?? [];
+  const prs = useSupabaseData(() => currentPRsForAthlete(athleteId), [athleteId]) ?? [];
+
+  const program = useSupabaseData(async () => {
+    const { data: assignment, error: assignmentError } = await supabase
+      .from("assignments")
+      .select("program_id")
+      .eq("athlete_id", athleteId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (assignmentError) throw assignmentError;
+    if (!assignment) return undefined;
+    const { data: programRow, error: programError } = await supabase
+      .from("programs")
+      .select()
+      .eq("id", assignment.program_id)
+      .maybeSingle();
+    if (programError) throw programError;
+    return programRow ? toProgram(programRow) : undefined;
+  }, [athleteId]);
 
   const lifetimeLoad = sets.filter((s) => s.track === "load").reduce((sum, s) => sum + s.volume, 0);
   const lifetimeDistance = sets.filter((s) => s.track === "distance").reduce((sum, s) => sum + s.volume, 0);

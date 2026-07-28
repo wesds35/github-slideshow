@@ -1,17 +1,11 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import logo from "../assets/logo.svg";
-import { useIdentity } from "../context/identity";
+import { useAuth } from "../context/auth";
 
 const navClass = ({ isActive }: { isActive: boolean }) => "nav-link" + (isActive ? " active" : "");
 
 export function Sidebar({ role }: { role: "coach" | "athlete" }) {
-  const navigate = useNavigate();
-  const { clear } = useIdentity();
-
-  const switchRole = () => {
-    clear();
-    navigate("/");
-  };
+  const { signOut } = useAuth();
 
   return (
     <aside className="sidebar">
@@ -42,10 +36,10 @@ export function Sidebar({ role }: { role: "coach" | "athlete" }) {
 
       <nav className="nav-group">
         <div className="nav-label">Session</div>
-        <a className="nav-link" onClick={switchRole}><span className="dot" /> Switch Role / Athlete</a>
+        <a className="nav-link" onClick={() => signOut()}><span className="dot" /> Log Out</a>
       </nav>
 
-      <div className="sidebar-footer">Local-first. Athlete data is never shared or sold. v1.0</div>
+      <div className="sidebar-footer">Private by design — your data is walled off at the database. v1.0</div>
     </aside>
   );
 }

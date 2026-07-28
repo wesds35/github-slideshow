@@ -1,4 +1,6 @@
-import { db, type LoggedSet } from "../db";
+import { supabase } from "./supabaseClient";
+import { toLoggedSet } from "./mappers";
+import type { LoggedSet } from "../db";
 import { epley1RM } from "./volume";
 
 export interface LiftPR {
@@ -41,7 +43,9 @@ export function isNewPR(priorSets: LoggedSet[], candidateWeight: number, candida
 
 /** Current PR per lift name for an athlete, across all their "load" track logged sets. */
 export async function currentPRsForAthlete(athleteId: string): Promise<LiftPR[]> {
-  const sets = await db.loggedSets.where("athleteId").equals(athleteId).toArray();
+  const { data, error } = await supabase.from("logged_sets").select().eq("athlete_id", athleteId);
+  if (error) throw error;
+  const sets = (data ?? []).map(toLoggedSet);
   const byLift = new Map<string, LoggedSet[]>();
   for (const s of sets) {
     if (s.track !== "load") continue;

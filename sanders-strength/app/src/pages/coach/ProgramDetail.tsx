@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
 import { useNavigate, useParams } from "react-router-dom";
-import { db, type VolumeTrack, type ProgramExercise } from "../../db";
+import { supabase } from "../../lib/supabaseClient";
+import { toProgram, toAthlete, toAssignment } from "../../lib/mappers";
+import { useSupabaseData, useRefreshKey } from "../../lib/useSupabaseData";
+import type { VolumeTrack, ProgramExercise } from "../../db";
 import { Topbar } from "../../components/Topbar";
 import { Modal } from "../../components/Modal";
 import {
@@ -36,11 +38,29 @@ const emptyExerciseForm: ExerciseSpec = {
 export function ProgramDetail() {
   const { programId } = useParams<{ programId: string }>();
   const navigate = useNavigate();
+  const [refreshKey, refresh] = useRefreshKey();
 
-  const program = useLiveQuery(() => (programId ? db.programs.get(programId) : undefined), [programId]);
-  const tree = useLiveQuery(() => (programId ? programTree(programId) : []), [programId]) ?? [];
-  const athletes = useLiveQuery(() => db.athletes.toArray(), []) ?? [];
-  const assignments = useLiveQuery(() => (programId ? db.assignments.where("programId").equals(programId).toArray() : []), [programId]) ?? [];
+  const program = useSupabaseData(async () => {
+    if (!programId) return undefined;
+    const { data, error } = await supabase.from("programs").select().eq("id", programId).maybeSingle();
+    if (error) throw error;
+    return data ? toProgram(data) : undefined;
+  }, [programId, refreshKey]);
+
+  const tree = useSupabaseData(() => (programId ? programTree(programId) : Promise.resolve([])), [programId, refreshKey]) ?? [];
+
+  const athletes = useSupabaseData(async () => {
+    const { data, error } = await supabase.from("athletes").select().order("name");
+    if (error) throw error;
+    return (data ?? []).map(toAthlete);
+  }, []) ?? [];
+
+  const assignments = useSupabaseData(async () => {
+    if (!programId) return [];
+    const { data, error } = await supabase.from("assignments").select().eq("program_id", programId);
+    if (error) throw error;
+    return (data ?? []).map(toAssignment);
+  }, [programId, refreshKey]) ?? [];
 
   const [addingDayToWeek, setAddingDayToWeek] = useState<string | null>(null);
   const [dayLabel, setDayLabel] = useState("");
@@ -79,6 +99,7 @@ export function ProgramDetail() {
       await addExercise(exerciseModal.dayId, exerciseForm);
     }
     setExerciseModal(null);
+    refresh();
   };
 
   const handleAddDay = async () => {
@@ -86,6 +107,7 @@ export function ProgramDetail() {
     await addDay(addingDayToWeek, dayLabel.trim());
     setAddingDayToWeek(null);
     setDayLabel("");
+    refresh();
   };
 
   const toggleAthlete = (id: string) => {
@@ -103,6 +125,7 @@ export function ProgramDetail() {
     }
     setAssigning(false);
     setSelectedAthletes(new Set());
+    refresh();
   };
 
   const handleDeleteProgram = async () => {
@@ -141,7 +164,7 @@ export function ProgramDetail() {
               <button className="btn btn-ghost btn-sm" onClick={() => setAddingDayToWeek(week.id)}>
                 + Add Day
               </button>
-              <button className="icon-btn" onClick={() => deleteWeek(week.id)}>
+              <button className="icon-btn" onClick={() => deleteWeek(week.id).then(refresh)}>
                 Remove Week
               </button>
             </div>
@@ -155,7 +178,7 @@ export function ProgramDetail() {
                   <button className="btn btn-ghost btn-sm" onClick={() => openAddExercise(day.id)}>
                     + Add Exercise
                   </button>
-                  <button className="icon-btn" onClick={() => deleteDay(day.id)}>
+                  <button className="icon-btn" onClick={() => deleteDay(day.id).then(refresh)}>
                     Remove Day
                   </button>
                 </div>
@@ -175,7 +198,7 @@ export function ProgramDetail() {
                     <button className="btn btn-ghost btn-sm" onClick={() => openEditExercise(day.id, ex)}>
                       Edit
                     </button>
-                    <button className="icon-btn" onClick={() => deleteExercise(ex.id)}>
+                    <button className="icon-btn" onClick={() => deleteExercise(ex.id).then(refresh)}>
                       ✕
                     </button>
                   </div>
@@ -186,7 +209,7 @@ export function ProgramDetail() {
         </div>
       ))}
 
-      <button className="btn btn-ghost" onClick={() => addWeek(programId)}>
+      <button className="btn btn-ghost" onClick={() => addWeek(programId).then(refresh)}>
         + Add Week
       </button>
 

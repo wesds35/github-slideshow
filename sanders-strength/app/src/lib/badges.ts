@@ -1,73 +1,46 @@
-import { db, uid, type BadgeDefinition, type VolumeTrack } from "../db";
+import { supabase } from "./supabaseClient";
+import { toBadgeDefinition } from "./mappers";
+import type { BadgeDefinition, VolumeTrack } from "../db";
 
-// Default tier thresholds per REFERENCE.md — coach-configurable at runtime via badgeDefinitions table.
-const DEFAULT_TIERS: Array<{ tier: number; name: string }> = [
-  { tier: 1, name: "Thrall" },
-  { tier: 2, name: "Karl" },
-  { tier: 3, name: "Jarl" },
-  { tier: 4, name: "Berserker" },
-  { tier: 5, name: "Einherjar" },
-  { tier: 6, name: "Valhalla" },
-];
-
-// Distance volume is distance × load (yd·lb) and wattage volume is watts × seconds (W·s) — see
-// calcVolume in ./volume.ts — so both are large, load-scale numbers, not raw miles or kilojoules.
-// Thresholds are sized against those actual units, not the smaller "true" physical unit a coach
-// might guess at a glance.
-const DEFAULT_THRESHOLDS: Record<VolumeTrack, number[]> = {
-  load: [10_000, 50_000, 150_000, 500_000, 1_000_000, 5_000_000],
-  distance: [5_000, 25_000, 75_000, 250_000, 750_000, 3_000_000],
-  wattage: [5_000, 25_000, 75_000, 250_000, 750_000, 3_000_000],
-};
-
-/**
- * Badge definition IDs are deterministic (not random) and seeding uses `bulkPut` (upsert) rather
- * than `bulkAdd`, so this is safe to call more than once concurrently — e.g. React StrictMode's
- * double-invoked effects in dev, or two tabs opening the app for the first time at once — without
- * ever producing duplicate tiers.
- */
-export async function ensureBadgeDefinitionsSeeded(): Promise<void> {
-  const rows: BadgeDefinition[] = [];
-  (Object.keys(DEFAULT_THRESHOLDS) as VolumeTrack[]).forEach((track) => {
-    DEFAULT_TIERS.forEach(({ tier, name }, i) => {
-      rows.push({
-        id: `${track}-${tier}`,
-        track,
-        tier,
-        name,
-        threshold: DEFAULT_THRESHOLDS[track][i],
-      });
-    });
-  });
-  await db.badgeDefinitions.bulkPut(rows);
-}
+// Tier thresholds live in Postgres (see supabase/schema.sql's seed insert), not here, so a coach
+// can tune them per roster without a redeploy.
 
 export async function badgeDefinitionsByTrack(track: VolumeTrack): Promise<BadgeDefinition[]> {
-  const defs = await db.badgeDefinitions.where("track").equals(track).toArray();
-  return defs.sort((a, b) => a.tier - b.tier);
+  const { data, error } = await supabase.from("badge_definitions").select().eq("track", track).order("tier");
+  if (error) throw error;
+  return (data ?? []).map(toBadgeDefinition);
 }
 
 /** Cumulative volume for an athlete on a given track, across all logged sets. */
 export async function athleteTrackVolume(athleteId: string, track: VolumeTrack): Promise<number> {
-  const sets = await db.loggedSets.where("athleteId").equals(athleteId).toArray();
-  return sets.filter((s) => s.track === track).reduce((sum, s) => sum + s.volume, 0);
+  const { data, error } = await supabase
+    .from("logged_sets")
+    .select("volume")
+    .eq("athlete_id", athleteId)
+    .eq("track", track);
+  if (error) throw error;
+  return (data ?? []).reduce((sum, s) => sum + s.volume, 0);
 }
 
 /** Checks an athlete's volume against thresholds and awards any newly-crossed badges. Returns the newly earned ones. */
 export async function evaluateBadgesForAthlete(athleteId: string, track: VolumeTrack): Promise<BadgeDefinition[]> {
-  const volume = await athleteTrackVolume(athleteId, track);
-  const defs = await badgeDefinitionsByTrack(track);
-  const already = await db.earnedBadges.where("athleteId").equals(athleteId).toArray();
-  const earnedDefIds = new Set(already.map((b) => b.badgeDefinitionId));
+  const [volume, defs, { data: alreadyEarned, error: earnedError }] = await Promise.all([
+    athleteTrackVolume(athleteId, track),
+    badgeDefinitionsByTrack(track),
+    supabase.from("earned_badges").select("badge_definition_id").eq("athlete_id", athleteId),
+  ]);
+  if (earnedError) throw earnedError;
 
-  const newlyEarned: BadgeDefinition[] = [];
-  for (const def of defs) {
-    if (volume >= def.threshold && !earnedDefIds.has(def.id)) {
-      await db.earnedBadges.add({ id: uid(), athleteId, badgeDefinitionId: def.id, earnedAt: Date.now() });
-      newlyEarned.push(def);
-    }
-  }
-  return newlyEarned;
+  const earnedDefIds = new Set((alreadyEarned ?? []).map((b) => b.badge_definition_id));
+  const toAward = defs.filter((def) => volume >= def.threshold && !earnedDefIds.has(def.id));
+  if (toAward.length === 0) return [];
+
+  const { error: insertError } = await supabase
+    .from("earned_badges")
+    .insert(toAward.map((def) => ({ athlete_id: athleteId, badge_definition_id: def.id })));
+  if (insertError) throw insertError;
+
+  return toAward;
 }
 
 export interface BadgeStatus extends BadgeDefinition {
@@ -77,12 +50,14 @@ export interface BadgeStatus extends BadgeDefinition {
 }
 
 export async function badgeStatusesForAthlete(athleteId: string, track: VolumeTrack): Promise<BadgeStatus[]> {
-  const [defs, volume, earned] = await Promise.all([
+  const [defs, volume, { data: earnedRows, error: earnedError }] = await Promise.all([
     badgeDefinitionsByTrack(track),
     athleteTrackVolume(athleteId, track),
-    db.earnedBadges.where("athleteId").equals(athleteId).toArray(),
+    supabase.from("earned_badges").select("badge_definition_id, earned_at").eq("athlete_id", athleteId),
   ]);
-  const earnedMap = new Map(earned.map((b) => [b.badgeDefinitionId, b.earnedAt]));
+  if (earnedError) throw earnedError;
+
+  const earnedMap = new Map((earnedRows ?? []).map((b) => [b.badge_definition_id, Date.parse(b.earned_at)]));
   return defs.map((def) => ({
     ...def,
     earned: earnedMap.has(def.id),

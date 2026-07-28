@@ -1,4 +1,6 @@
-import { db, uid, type LoggedSet, type ProgramExercise, type VolumeTrack, type BadgeDefinition } from "../db";
+import { supabase } from "./supabaseClient";
+import { toLoggedSet } from "./mappers";
+import type { LoggedSet, ProgramExercise, VolumeTrack, BadgeDefinition } from "../db";
 import { calcVolume } from "./volume";
 import { isNewPR } from "./prs";
 import { evaluateBadgesForAthlete } from "./badges";
@@ -14,7 +16,6 @@ export interface SetLogInput {
   load?: number;
   watts?: number;
   durationSec?: number;
-  loggedAt?: number;
 }
 
 export interface LogSetResult {
@@ -37,34 +38,38 @@ export async function logSet(input: SetLogInput): Promise<LogSetResult> {
 
   let isPR = false;
   if (track === "load" && input.weight != null && input.reps != null) {
-    const priorSets = await db.loggedSets
-      .where("[athleteId+exerciseName]")
-      .equals([input.athleteId, input.exercise.name])
-      .toArray();
-    isPR = isNewPR(priorSets, input.weight, input.reps);
+    const { data: priorRows, error: priorError } = await supabase
+      .from("logged_sets")
+      .select()
+      .eq("athlete_id", input.athleteId)
+      .eq("exercise_name", input.exercise.name);
+    if (priorError) throw priorError;
+    isPR = isNewPR((priorRows ?? []).map(toLoggedSet), input.weight, input.reps);
   }
 
-  const set: LoggedSet = {
-    id: uid(),
-    sessionId: input.sessionId,
-    exerciseId: input.exercise.id,
-    athleteId: input.athleteId,
-    exerciseName: input.exercise.name,
-    track,
-    setNumber: input.setNumber,
-    weight: input.weight,
-    reps: input.reps,
-    distance: input.distance,
-    load: input.load,
-    watts: input.watts,
-    durationSec: input.durationSec,
-    volume,
-    isPR,
-    loggedAt: input.loggedAt ?? Date.now(),
-  };
+  const { data: setRow, error: insertError } = await supabase
+    .from("logged_sets")
+    .insert({
+      session_id: input.sessionId,
+      exercise_id: input.exercise.id,
+      athlete_id: input.athleteId,
+      exercise_name: input.exercise.name,
+      track,
+      set_number: input.setNumber,
+      weight: input.weight,
+      reps: input.reps,
+      distance: input.distance,
+      load: input.load,
+      watts: input.watts,
+      duration_sec: input.durationSec,
+      volume,
+      is_pr: isPR,
+    })
+    .select()
+    .single();
+  if (insertError) throw insertError;
 
-  await db.loggedSets.add(set);
   const newlyEarnedBadges = await evaluateBadgesForAthlete(input.athleteId, track);
 
-  return { set, newlyEarnedBadges };
+  return { set: toLoggedSet(setRow), newlyEarnedBadges };
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
-import { db, type VolumeTrack } from "../../db";
+import type { VolumeTrack } from "../../db";
+import { badgeDefinitionsByTrack } from "../../lib/badges";
+import { useSupabaseData } from "../../lib/useSupabaseData";
 import { Topbar } from "../../components/Topbar";
 import { Tabs } from "../../components/Tabs";
 
@@ -14,7 +15,7 @@ const TRACK_UNIT: Record<VolumeTrack, string> = { load: "lb", distance: "yd·lb"
 
 export function BadgeCatalog() {
   const [track, setTrack] = useState<VolumeTrack>("load");
-  const defs = useLiveQuery(() => db.badgeDefinitions.where("track").equals(track).toArray(), [track]) ?? [];
+  const defs = useSupabaseData(() => badgeDefinitionsByTrack(track), [track]) ?? [];
   const sorted = [...defs].sort((a, b) => a.tier - b.tier);
 
   return (

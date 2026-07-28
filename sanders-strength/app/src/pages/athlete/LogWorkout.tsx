@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
 import { useNavigate, useParams } from "react-router-dom";
-import { db, type ProgramExercise } from "../../db";
+import { supabase } from "../../lib/supabaseClient";
+import { toLoggedSet, toScheduledSession } from "../../lib/mappers";
+import { useSupabaseData, useRefreshKey } from "../../lib/useSupabaseData";
+import type { ProgramExercise } from "../../db";
 import { Topbar } from "../../components/Topbar";
 import { programDayDetail, markSessionStatus } from "../../lib/programs";
 import { logSet } from "../../lib/logging";
@@ -9,10 +11,17 @@ import { formatVolume } from "../../lib/volume";
 import { announceBadgesEarned } from "../../lib/toastBus";
 
 function ExerciseLogger({ sessionId, athleteId, exercise }: { sessionId: string; athleteId: string; exercise: ProgramExercise }) {
-  const loggedSets = useLiveQuery(
-    () => db.loggedSets.where("sessionId").equals(sessionId).and((s) => s.exerciseId === exercise.id).toArray(),
-    [sessionId, exercise.id],
-  ) ?? [];
+  const [refreshKey, refresh] = useRefreshKey();
+  const loggedSets = useSupabaseData(async () => {
+    const { data, error } = await supabase
+      .from("logged_sets")
+      .select()
+      .eq("session_id", sessionId)
+      .eq("exercise_id", exercise.id)
+      .order("set_number");
+    if (error) throw error;
+    return (data ?? []).map(toLoggedSet);
+  }, [sessionId, exercise.id, refreshKey]) ?? [];
 
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState(String(exercise.prescribedReps ?? ""));
@@ -43,6 +52,7 @@ function ExerciseLogger({ sessionId, athleteId, exercise }: { sessionId: string;
     setLoad("");
     setWatts("");
     setDurationSec("");
+    refresh();
   };
 
   return (
@@ -157,8 +167,15 @@ function ExerciseLogger({ sessionId, athleteId, exercise }: { sessionId: string;
 export function LogWorkout() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
-  const session = useLiveQuery(() => (sessionId ? db.scheduledSessions.get(sessionId) : undefined), [sessionId]);
-  const dayDetail = useLiveQuery(() => (session ? programDayDetail(session.dayId) : undefined), [session]);
+
+  const session = useSupabaseData(async () => {
+    if (!sessionId) return undefined;
+    const { data, error } = await supabase.from("scheduled_sessions").select().eq("id", sessionId).maybeSingle();
+    if (error) throw error;
+    return data ? toScheduledSession(data) : undefined;
+  }, [sessionId]);
+
+  const dayDetail = useSupabaseData(() => (session ? programDayDetail(session.dayId) : Promise.resolve(undefined)), [session]);
 
   if (!sessionId || !session || !dayDetail?.day) return null;
 

@@ -1,7 +1,17 @@
 import { useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
 import { Link } from "react-router-dom";
-import { db, uid } from "../../db";
+import { supabase } from "../../lib/supabaseClient";
+import {
+  toAthlete,
+  toAssignment,
+  toProgram,
+  toScheduledSession,
+  toLoggedSet,
+  toEarnedBadge,
+  toBadgeDefinition,
+} from "../../lib/mappers";
+import { useSupabaseData, useRefreshKey } from "../../lib/useSupabaseData";
+import { useAuth } from "../../context/auth";
 import { Topbar } from "../../components/Topbar";
 import { Modal } from "../../components/Modal";
 import { buildRoster, recentPRs, weeklyLoadVolumeTrend, withinLastDays } from "../../lib/dashboard";
@@ -22,13 +32,50 @@ function currentWeekRange(): { start: string; end: string } {
 }
 
 export function CoachDashboard() {
-  const athletes = useLiveQuery(() => db.athletes.toArray(), []) ?? [];
-  const assignments = useLiveQuery(() => db.assignments.toArray(), []) ?? [];
-  const programs = useLiveQuery(() => db.programs.toArray(), []) ?? [];
-  const sessions = useLiveQuery(() => db.scheduledSessions.toArray(), []) ?? [];
-  const sets = useLiveQuery(() => db.loggedSets.toArray(), []) ?? [];
-  const earned = useLiveQuery(() => db.earnedBadges.toArray(), []) ?? [];
-  const badgeDefs = useLiveQuery(() => db.badgeDefinitions.toArray(), []) ?? [];
+  const { fullName } = useAuth();
+  const [refreshKey, refresh] = useRefreshKey();
+
+  const athletes = useSupabaseData(async () => {
+    const { data, error } = await supabase.from("athletes").select().order("name");
+    if (error) throw error;
+    return (data ?? []).map(toAthlete);
+  }, [refreshKey]) ?? [];
+
+  const assignments = useSupabaseData(async () => {
+    const { data, error } = await supabase.from("assignments").select();
+    if (error) throw error;
+    return (data ?? []).map(toAssignment);
+  }, [refreshKey]) ?? [];
+
+  const programs = useSupabaseData(async () => {
+    const { data, error } = await supabase.from("programs").select();
+    if (error) throw error;
+    return (data ?? []).map(toProgram);
+  }, [refreshKey]) ?? [];
+
+  const sessions = useSupabaseData(async () => {
+    const { data, error } = await supabase.from("scheduled_sessions").select();
+    if (error) throw error;
+    return (data ?? []).map(toScheduledSession);
+  }, [refreshKey]) ?? [];
+
+  const sets = useSupabaseData(async () => {
+    const { data, error } = await supabase.from("logged_sets").select();
+    if (error) throw error;
+    return (data ?? []).map(toLoggedSet);
+  }, [refreshKey]) ?? [];
+
+  const earned = useSupabaseData(async () => {
+    const { data, error } = await supabase.from("earned_badges").select();
+    if (error) throw error;
+    return (data ?? []).map(toEarnedBadge);
+  }, [refreshKey]) ?? [];
+
+  const badgeDefs = useSupabaseData(async () => {
+    const { data, error } = await supabase.from("badge_definitions").select();
+    if (error) throw error;
+    return (data ?? []).map(toBadgeDefinition);
+  }, [refreshKey]) ?? [];
 
   const volume7d = sets
     .filter((s) => s.track === "load" && withinLastDays(s.loggedAt, 7))
@@ -48,13 +95,23 @@ export function CoachDashboard() {
 
   const [addingAthlete, setAddingAthlete] = useState(false);
   const [newAthleteName, setNewAthleteName] = useState("");
+  const [newAthleteEmail, setNewAthleteEmail] = useState("");
+  const [inviteError, setInviteError] = useState<string | null>(null);
 
   const addAthlete = async () => {
     const name = newAthleteName.trim();
-    if (!name) return;
-    await db.athletes.add({ id: uid(), name, initials: initialsFor(name), createdAt: Date.now() });
+    const email = newAthleteEmail.trim().toLowerCase();
+    if (!name || !email) return;
+    setInviteError(null);
+    const { error } = await supabase.from("athletes").insert({ name, initials: initialsFor(name), email });
+    if (error) {
+      setInviteError(error.message.includes("duplicate") ? "That email is already on your roster." : error.message);
+      return;
+    }
     setNewAthleteName("");
+    setNewAthleteEmail("");
     setAddingAthlete(false);
+    refresh();
   };
 
   return (
@@ -68,7 +125,7 @@ export function CoachDashboard() {
               + Add Athlete
             </button>
             <div className="user-chip">
-              <div className="avatar">CS</div> Coach Sanders
+              <div className="avatar">{initialsFor(fullName ?? "Coach")}</div> {fullName ?? "Coach"}
             </div>
           </div>
         }
@@ -138,34 +195,44 @@ export function CoachDashboard() {
 
       <div className="card">
         <h3>Athlete Roster</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Athlete</th>
-              <th>Program</th>
-              <th>Last Session</th>
-              <th>7d Volume</th>
-              <th>Latest Badge</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {roster.map((row) => (
-              <tr key={row.athlete.id}>
-                <td>{row.athlete.name}</td>
-                <td className="muted">{row.programName ?? "Unassigned"}</td>
-                <td className="muted">{row.lastSessionLabel}</td>
-                <td>{Math.round(row.volume7d).toLocaleString()} lb</td>
-                <td>{row.latestBadgeName ? <span className="badge-pill">{row.latestBadgeName}</span> : <span className="muted">—</span>}</td>
-                <td>
-                  <Link className="btn btn-ghost btn-sm" to={`/coach/athletes/${row.athlete.id}`}>
-                    View
-                  </Link>
-                </td>
+        {roster.length === 0 ? (
+          <div className="empty-state">
+            <div className="rune-big">ᛋ</div>
+            No athletes yet — add one to get started.
+          </div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Athlete</th>
+                <th>Program</th>
+                <th>Last Session</th>
+                <th>7d Volume</th>
+                <th>Latest Badge</th>
+                <th></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {roster.map((row) => (
+                <tr key={row.athlete.id}>
+                  <td>
+                    {row.athlete.name}
+                    {!row.athlete.userId && <span className="badge-pill" style={{ marginLeft: 8 }}>Invited</span>}
+                  </td>
+                  <td className="muted">{row.programName ?? "Unassigned"}</td>
+                  <td className="muted">{row.lastSessionLabel}</td>
+                  <td>{Math.round(row.volume7d).toLocaleString()} lb</td>
+                  <td>{row.latestBadgeName ? <span className="badge-pill">{row.latestBadgeName}</span> : <span className="muted">—</span>}</td>
+                  <td>
+                    <Link className="btn btn-ghost btn-sm" to={`/coach/athletes/${row.athlete.id}`}>
+                      View
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <hr className="rune-divider" />
@@ -176,6 +243,23 @@ export function CoachDashboard() {
             <label>Full Name</label>
             <input value={newAthleteName} onChange={(e) => setNewAthleteName(e.target.value)} placeholder="e.g. Jordan Vik" autoFocus />
           </div>
+          <div className="field">
+            <label>Email</label>
+            <input
+              type="email"
+              value={newAthleteEmail}
+              onChange={(e) => setNewAthleteEmail(e.target.value)}
+              placeholder="jordan@example.com"
+            />
+            <p className="muted" style={{ fontSize: ".72rem", marginTop: 4 }}>
+              They'll sign up with this exact email to claim their account and see only their own data.
+            </p>
+          </div>
+          {inviteError && (
+            <p className="muted" style={{ color: "var(--red-bright)" }}>
+              {inviteError}
+            </p>
+          )}
           <div className="modal-actions">
             <button className="btn btn-ghost" onClick={() => setAddingAthlete(false)}>
               Cancel

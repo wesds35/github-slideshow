@@ -1,8 +1,8 @@
-import { useIdentity } from "../../context/identity";
+import { useAuth } from "../../context/auth";
 import { AthleteDashboardView } from "../AthleteDashboardView";
 
 export function AthleteDashboard() {
-  const { athleteId } = useIdentity();
-  if (!athleteId) return null;
-  return <AthleteDashboardView athleteId={athleteId} badgesPath="/athlete/badges" />;
+  const { athlete } = useAuth();
+  if (!athlete) return null;
+  return <AthleteDashboardView athleteId={athlete.id} badgesPath="/athlete/badges" />;
 }

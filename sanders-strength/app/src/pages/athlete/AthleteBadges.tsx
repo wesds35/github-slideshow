@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
 import type { VolumeTrack } from "../../db";
 import { Topbar } from "../../components/Topbar";
 import { Tabs } from "../../components/Tabs";
 import { BadgeCase } from "../../components/BadgeCase";
 import { badgeStatusesForAthlete } from "../../lib/badges";
-import { useIdentity } from "../../context/identity";
+import { useSupabaseData } from "../../lib/useSupabaseData";
+import { useAuth } from "../../context/auth";
 
 const TRACK_LABEL: Record<VolumeTrack, string> = {
   load: "Rep (Load) Volume",
@@ -14,9 +14,10 @@ const TRACK_LABEL: Record<VolumeTrack, string> = {
 };
 
 export function AthleteBadges() {
-  const { athleteId } = useIdentity();
+  const { athlete } = useAuth();
+  const athleteId = athlete?.id;
   const [track, setTrack] = useState<VolumeTrack>("load");
-  const badges = useLiveQuery(() => (athleteId ? badgeStatusesForAthlete(athleteId, track) : []), [athleteId, track]) ?? [];
+  const badges = useSupabaseData(() => (athleteId ? badgeStatusesForAthlete(athleteId, track) : Promise.resolve([])), [athleteId, track]) ?? [];
 
   if (!athleteId) return null;
 
