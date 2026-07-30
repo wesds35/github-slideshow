@@ -35,9 +35,15 @@ export async function evaluateBadgesForAthlete(athleteId: string, track: VolumeT
   const toAward = defs.filter((def) => volume >= def.threshold && !earnedDefIds.has(def.id));
   if (toAward.length === 0) return [];
 
+  // Upsert with ignoreDuplicates: two near-simultaneous logSet calls can both see a badge as
+  // unearned; the unique (athlete_id, badge_definition_id) constraint makes the second insert a
+  // no-op instead of an error that would bubble up and break set logging.
   const { error: insertError } = await supabase
     .from("earned_badges")
-    .insert(toAward.map((def) => ({ athlete_id: athleteId, badge_definition_id: def.id })));
+    .upsert(
+      toAward.map((def) => ({ athlete_id: athleteId, badge_definition_id: def.id })),
+      { onConflict: "athlete_id,badge_definition_id", ignoreDuplicates: true },
+    );
   if (insertError) throw insertError;
 
   return toAward;

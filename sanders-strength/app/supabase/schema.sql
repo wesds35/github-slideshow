@@ -42,14 +42,17 @@ create policy "profiles: self update" on public.profiles
 
 -- Athletes may edit their own profile (e.g. full_name), but must never be able to grant
 -- themselves the coach role by PATCHing their own row directly. A trigger — not the RLS check
--- above — enforces this, because it can safely compare against the pre-update value; only an
--- update performed by an existing coach is allowed to actually change `role`.
+-- above — enforces this, because it can safely compare against the pre-update value. Role
+-- changes are allowed only when the updater is an existing coach, or when there is no JWT at
+-- all (auth.uid() is null) — the latter is the Supabase SQL editor / service role, which is how
+-- the very first coach gets promoted per README-DEPLOY.md. A client request always carries a
+-- JWT, so this null-check never opens a path from the app.
 create function public.prevent_role_self_escalation()
 returns trigger
 language plpgsql
 as $$
 begin
-  if not public.is_coach() then
+  if auth.uid() is not null and not public.is_coach() then
     new.role := old.role;
   end if;
   return new;
@@ -98,6 +101,12 @@ create policy "athletes: coach full access" on public.athletes
 
 create policy "athletes: self read" on public.athletes
   for select using (user_id = auth.uid());
+
+-- The unclaimed invite matching your own verified email must be SELECT-visible: Postgres
+-- requires UPDATE target rows referenced by a WHERE clause to pass SELECT policies too, so
+-- without this the claim update below can never find the row it's claiming.
+create policy "athletes: read own invite" on public.athletes
+  for select using (user_id is null and email = auth.jwt() ->> 'email');
 
 create policy "athletes: claim own invite" on public.athletes
   for update
@@ -167,36 +176,6 @@ create policy "program_days: coach full access" on public.program_days
 create policy "program_exercises: coach full access" on public.program_exercises
   for all using (public.is_coach()) with check (public.is_coach());
 
--- An athlete may read a program's structure only if it's assigned to them right now.
-create policy "programs: read if assigned to me" on public.programs
-  for select using (
-    exists (
-      select 1 from public.assignments a
-      where a.program_id = programs.id and public.owns_athlete(a.athlete_id)
-    )
-  );
-create policy "program_weeks: read if assigned to me" on public.program_weeks
-  for select using (
-    exists (
-      select 1 from public.assignments a
-      where a.program_id = program_weeks.program_id and public.owns_athlete(a.athlete_id)
-    )
-  );
-create policy "program_days: read if assigned to me" on public.program_days
-  for select using (
-    exists (
-      select 1 from public.assignments a
-      where a.program_id = program_days.program_id and public.owns_athlete(a.athlete_id)
-    )
-  );
-create policy "program_exercises: read if assigned to me" on public.program_exercises
-  for select using (
-    exists (
-      select 1 from public.assignments a
-      where a.program_id = program_exercises.program_id and public.owns_athlete(a.athlete_id)
-    )
-  );
-
 -- ── assignments / scheduled_sessions ──────────────────────────────────────────────────────────
 create table public.assignments (
   id uuid primary key default gen_random_uuid(),
@@ -229,6 +208,38 @@ create policy "scheduled_sessions: self read" on public.scheduled_sessions
   for select using (public.owns_athlete(athlete_id));
 create policy "scheduled_sessions: self update status" on public.scheduled_sessions
   for update using (public.owns_athlete(athlete_id)) with check (public.owns_athlete(athlete_id));
+
+-- An athlete may read a program's structure only if it's assigned to them right now. These
+-- policies live here — after assignments exists — because Postgres validates the tables a policy
+-- references at creation time.
+create policy "programs: read if assigned to me" on public.programs
+  for select using (
+    exists (
+      select 1 from public.assignments a
+      where a.program_id = programs.id and public.owns_athlete(a.athlete_id)
+    )
+  );
+create policy "program_weeks: read if assigned to me" on public.program_weeks
+  for select using (
+    exists (
+      select 1 from public.assignments a
+      where a.program_id = program_weeks.program_id and public.owns_athlete(a.athlete_id)
+    )
+  );
+create policy "program_days: read if assigned to me" on public.program_days
+  for select using (
+    exists (
+      select 1 from public.assignments a
+      where a.program_id = program_days.program_id and public.owns_athlete(a.athlete_id)
+    )
+  );
+create policy "program_exercises: read if assigned to me" on public.program_exercises
+  for select using (
+    exists (
+      select 1 from public.assignments a
+      where a.program_id = program_exercises.program_id and public.owns_athlete(a.athlete_id)
+    )
+  );
 
 -- ── logged_sets ───────────────────────────────────────────────────────────────────────────────
 create table public.logged_sets (

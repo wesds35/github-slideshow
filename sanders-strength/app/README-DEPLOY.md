@@ -19,6 +19,12 @@ Total time: ~20 minutes, most of it waiting for a project to spin up.
 3. You should see "Success. No rows returned." This created every table, the row-level security
    policies that keep athletes walled off from each other, and seeded the badge tiers.
 
+The isolation these policies enforce is covered by an automated test suite
+([`supabase/rls-tests/`](./supabase/rls-tests/)) that runs the same schema in a throwaway
+Postgres and verifies — as coach, two different athletes, and an anonymous session — that
+athletes can claim their invite, see only their own data, and can't escalate their role. Run it
+any time you change the policies: `./supabase/rls-tests/run.sh` (needs Docker).
+
 ## 3. Get your project's API keys
 
 Project **Settings → API**. You need two values:
