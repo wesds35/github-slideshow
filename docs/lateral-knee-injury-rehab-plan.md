@@ -45,6 +45,31 @@ Two caveats govern everything that follows:
 | **Effusion at 12–36 h (historical)** | Reactive — avascular-zone meniscal tear or capsular irritation. |
 | **No effusion, ever** | Extra-articular process. Fibular head insertion rises toward **~60–70%**; meniscus falls substantially (small tears can still be dry, so not to zero); PTFJ stays live. |
 
+### Mechanism update (Aug 14, later): torque and force were minimal
+
+The athlete reports the injuring load was low — no violent twist, no external force, just the heel traveling under the hips in kneeling. This is a genuinely informative update, and it cuts in a specific direction:
+
+**Healthy ligament and tendon do not pop under minimal load.** A low-energy pop in mid-arc deep flexion points toward one of two explanations:
+
+1. **A mechanical event rather than a tissue failure** — something snapping or subluxing over bone. PTFJ subluxation is a low-force event in exactly this position (kneeling, foot tucked). A snapping biceps femoris tendon or popliteus tendon translating over the fibular head/lateral condyle in deep flexion is the same category: an audible lateral pop that requires almost no torque, followed by insertional soreness and pain-inhibited (rather than structurally weak) hamstring function.
+2. **A structurally vulnerable tissue failing under trivial load.** This is the classic presentation of a **degenerative or discoid meniscus tear** — "squatted down / knelt, felt a pop, minimal force involved." Deep-flexion pinching of the lateral posterior horn needs only bodyweight. The same logic applies to a pre-existing (possibly silent) insertional tendinopathy failing at low load in a Masters athlete with years of leg-entanglement training on that knee.
+
+**What low energy argues against:** high-grade structural disruption. Styloid avulsions, grade III PLC injuries, multi-ligament patterns, and cruciate involvement are high-energy injuries; the reported mechanism now fits them poorly. The surgical branches of the tree get less likely — with one important exception below.
+
+**Revised estimates (conditioned on low force, still pre-imaging, still pre-stroke-test):**
+
+| Diagnosis | Was | Now | Direction & why |
+|---|---|---|---|
+| Lateral meniscus, posterior horn/root (incl. discoid) | ~30–40% | **~35–45%** | ↑ Low-force pop in deep flexion is the signature story of a vulnerable meniscus; discoid consideration strengthens. |
+| Fibular head insertional injury | ~45–55% | **~35–45%** | ↓ slightly, and the internal mix shifts: low-grade strain on tendinopathic tissue or pain-inhibited weakness becomes more likely than a true partial tear; **styloid avulsion sub-probability falls to ~5% or less**. Snapping-tendon variants join this bucket. |
+| PTFJ subluxation | ~5–10% | **~10–20%** | ↑ The one diagnosis on the list for which minimal force is *typical*. The pending A-P translation test gets more important. |
+| PFL / popliteus (deep PLC) | ~15–20% | **~10%** | ↓ High-grade deep-corner injury needs energy this mechanism didn't have; low-grade strain or popliteus tendon snap remains possible. |
+| Isolated LCL | ~3–5% | **~2–3%** | ↓ Was already the weakest candidate; minimal force removes what little remained. |
+
+**The exception that keeps the urgency:** meniscal **root** tears are notorious for occurring under trivial load — the low-energy story does *not* discount the one meniscal pattern with the worst untreated consequences (Part III, item 2). So while low force softens the avulsion/PLC surgical branches, it actually *sharpens* the case for the MRI: the now-strengthened leading candidates (meniscus, PTFJ) are separated from each other and from the insertional bucket by imaging and the stroke test, not by symptom trajectory.
+
+**Net effect on the plan:** none of the gates change. The plain film is still worth its ten minutes (cheap, and a nondisplaced avulsion under low load is unlikely but not impossible). The stroke test is now the highest-value two minutes available, because the two diagnoses it separates — intra-articular meniscus vs. extra-articular insertion/PTFJ — are now co-leaders.
+
 ### Other pending discriminators
 
 - **Figure-4 palpation, three points ~2 cm apart:** fibular head (+ A-P translation) → PTFJ/insertional; boggy or discontinuous LCL midsubstance cord → LCL; lateral joint line + positive Thessaly at 20° → meniscus.
