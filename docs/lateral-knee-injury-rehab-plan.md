@@ -185,6 +185,55 @@ One asymmetry worth stating plainly: **the downside is not symmetric.** Skipping
 
 ---
 
+## Part III — Sequelae & Downstream Consequences by Diagnosis
+
+What each candidate injury does to the knee over time if it is missed, undertreated, or re-injured — the "cost side" of every branch in the decision tree above. Ordered to match the Part I ranking.
+
+### 1. Fibular head insertional injury (partial biceps femoris / conjoined tendon, or styloid avulsion)
+
+- **Chronic insertional tendinopathy.** A partial tendon injury that is loaded too early or never rebuilt eccentrically tends to become a degenerative insertion: pain with resisted flexion and hip-extension patterns that waxes and wanes for months to years. In grappling terms, every heel drive and every leg-pummeling exchange re-provokes it.
+- **High re-injury risk.** Hamstring injuries have among the highest recurrence rates of any muscle-tendon injury, and recurrences are typically worse than the index injury. The single biggest predictor of recurrence is returning before eccentric strength at long muscle length is restored — which is exactly what competing in September on a 4-week-old insertion would do.
+- **Avulsion nonunion → chronic posterolateral instability.** If the styloid fragment (arcuate avulsion) doesn't unite, the structures anchored to it — PFL and arcuate complex — are functionally detached. The result is rotational instability that no amount of hamstring rehab fixes, plus a varus/rotatory thrust under load. This is why the plain film either "escalates to a surgical conversation or closes that branch permanently."
+- **Delayed peroneal nerve involvement.** The common peroneal nerve wraps the fibular neck directly below the injury. Callus from a healing avulsion or scar from the tendon can irritate it late — intermittent first-webspace numbness, eversion fatigue, in the worst case foot drop — sometimes weeks after the original injury looked fine. This is why the nerve screen repeats throughout the plan, not just at Gate 0.
+- **Weak link in the posterolateral chain.** The biceps femoris is a dynamic stabilizer against tibial internal rotation and varus. A chronically weak insertion leaves the static PLC structures absorbing loads the muscle used to share — a slow-motion setup for the deeper PLC injury the athlete didn't have the first time.
+
+### 2. Lateral meniscus, posterior horn or root
+
+- **Root tear = functional meniscectomy.** The root anchors the hoop; tear it and circumferential (hoop) stress is lost, the meniscus extrudes, and the lateral compartment sees near-total-meniscectomy contact pressures even though the tissue is still "there." Cartilage wear follows on a timeline of months-to-a-few-years, not decades.
+- **The lateral compartment tolerates this worse than the medial.** The lateral tibial plateau is convex and the lateral meniscus carries a larger share of compartment load (~70% lateral vs ~50% medial), so lateral meniscal deficiency degenerates faster than the equivalent medial injury. Lateral post-meniscectomy knees are the classic early-osteoarthritis story in young athletes.
+- **Subchondral insufficiency fracture.** An extruded or deficient lateral meniscus can overload the femoral condyle to the point of subchondral collapse — a painful, sometimes surgery-forcing complication that can appear within months of an untreated root tear.
+- **The repair window is real and asymmetric.** Root and peripheral (red-zone) tears repaired early heal well; the same tear repaired late — after extrusion and cartilage change — has meaningfully worse outcomes, and chondral loss that has already happened does not reverse. Waiting to "see how September goes" spends this window.
+- **Non-root tears: propagation and mechanical conversion.** A stable posterior horn tear that is ground through deep-flexion rotation (ashi garami, again) can propagate into a flap or bucket-handle pattern — converting a silent tear into a locking knee, and a repairable tear into a partial meniscectomy. Discoid menisci, if present, tear and re-tear more readily. Lateral tears also form parameniscal cysts, which present as a lateral joint-line lump with aching that worsens with activity.
+
+### 3. Popliteofibular ligament / popliteus (deep posterolateral corner)
+
+- **Chronic posterolateral rotatory instability (PLRI).** The signature sequela of a missed PLC injury: the tibia rotates externally and drops back on the lateral side under load. On the mat this reads as the knee "giving" in exactly the position his game lives in — externally rotated, flexed, loaded.
+- **Thrust gait and medial compartment overload.** Chronic PLC deficiency produces a varus thrust with each step; the medial compartment takes the overload and wears prematurely. In varus-aligned athletes (Section 10's alignment check exists for this reason) the deterioration is faster, and a corrective osteotomy can end up on the table before any ligament surgery.
+- **It silently destroys cruciate reconstructions.** Unrecognized PLC injury is the classic cause of ACL and PCL graft failure — the graft takes rotational loads the corner should absorb, stretches, and fails. If this knee ever needs a cruciate procedure, an unhealed PLC underneath it is the reason it wouldn't hold.
+- **Acute repair vs. delayed reconstruction.** Reattaching native tissue inside ~2–3 weeks outperforms reconstruction; miss the window and the fallback is a bigger operation (grafts, tunnels, longer rehab, ~9–12 months) with somewhat worse rotational control. This asymmetry is the entire argument for imaging this week rather than after Worlds.
+- **Peroneal nerve exposure.** PLC injuries carry the highest peroneal nerve co-injury rate of any knee ligament pattern; even without initial deficit, chronic instability keeps traction on the nerve.
+
+### 4. Proximal tibiofibular joint instability
+
+- **Recurrent subluxation.** Once the capsule is lax, the fibular head can sublux repeatedly — a clunk or pop with deep squatting, kneeling, and loaded dorsiflexion. Every one of those is a BJJ position; kneeling shin-on-shin passing and deep single-leg-X entries are the exact provocation.
+- **Intermittent peroneal symptoms.** The subluxing fibular head tractions the nerve at the neck: episodic lateral-calf paresthesia, first-webspace numbness, eversion fatigue after training. Usually reversible early; chronic cases can develop persistent neuropathy.
+- **Local arthrosis and chronic lateral pain.** A chronically incongruent PTFJ develops degenerative change and a low-grade lateral ache that mimics — and gets treated as — everything else on this list, often for years, because it is the most misdiagnosed item here.
+- **Escalation path.** Failed conservative management (activity modification, stabilization work, taping/bracing) leads to surgical stabilization or, historically, fibular head resection — a big intervention for a joint most people have never heard of.
+
+### 5. Isolated LCL sprain (grade 2)
+
+- **Best prognosis on the list.** Isolated grade 1–2 LCL sprains managed non-operatively generally heal with full return to sport; this is the one diagnosis where the original 12-week plan was well-matched to the problem.
+- **Residual varus laxity.** Incomplete healing leaves a lax lateral restraint: a sense of lateral opening with cutting, and increased load transferred to the secondary restraints (the PLC — see #3) and the lateral compartment. In a varus-aligned athlete, laxity plus alignment compounds.
+- **The real risk is the missed companion.** Since ≤25% of lateral-sided injuries are truly isolated LCL, the dominant "side effect" of this diagnosis is anchoring on it — treating the LCL while a PLC or meniscal injury quietly accrues the sequelae above. That is precisely the failure mode the context document exists to prevent.
+
+### Cross-cutting consequences (any diagnosis)
+
+- **Arthrogenic muscle inhibition.** Any persistent effusion reflexively shuts down the quadriceps regardless of which structure is injured — a reason the weekly stroke test gates loading throughout the plan.
+- **Kinesiophobia and game abandonment.** Apprehension in leg entanglements after a lateral knee injury is common, predicts re-injury when athletes push through it, and for a leg-lock-centric competitor amounts to losing the A-game. It is why the Phase 5 ladder ends with *defensive* entanglement rounds and why the return-to-competition criteria include the apprehension check.
+- **The conversion cascade.** The single most expensive sequela available in this case is the one in the competition table: re-injuring a conservatively manageable lesion in September and converting it into a reconstruction — trading a 12-week plan for a 6–12-month one, with the cartilage and instability costs above attached.
+
+---
+
 ### Monitoring log (track every session, all 12 weeks)
 
 - Pain during (0–10), pain next morning (0–10).
