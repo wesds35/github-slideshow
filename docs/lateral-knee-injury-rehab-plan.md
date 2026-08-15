@@ -70,6 +70,31 @@ The athlete reports the injuring load was low — no violent twist, no external 
 
 **Net effect on the plan:** none of the gates change. The plain film is still worth its ten minutes (cheap, and a nondisplaced avulsion under low load is unlikely but not impossible). The stroke test is now the highest-value two minutes available, because the two diagnoses it separates — intra-articular meniscus vs. extra-articular insertion/PTFJ — are now co-leaders.
 
+### Symptom progression (Aug 15): flexion now difficult
+
+New report: knee flexion is hard **from an already-bent position**, and it is now **hard to bend the leg while walking**.
+
+The walking detail is the informative one. Swing-phase knee flexion during walking is a low-demand, mostly passive pendulum movement — it needs very little hamstring force. Pure insertional hamstring weakness does not usually make walking-flexion difficult. Something limiting *even that* points toward one of:
+
+1. **Effusion arriving on the reactive timeline (12–36 h).** A distending capsule resists flexion before it does anything else — the knee feels full, tight, and hard to bend, worst in the morning or after sitting. If this is what's happening, it is the intra-articular signal the whole differential has been waiting on, and it moves the **lateral meniscus to the top of the table** (with the timing itself pointing at an avascular-zone tear or capsular irritation rather than hemarthrosis).
+2. **A mechanical flexion block.** Displaced posterior-horn meniscal tissue blocks *flexion* (bucket-handle fragments block extension — the absence of an extension block never ruled this out). A springy, reproducible stop at a specific angle, or a knee that suddenly won't bend past a point it managed yesterday, fits displaced tissue.
+3. **Guarding / pain inhibition.** The least alarming option: the hamstring hurts, so the nervous system rations flexion. Real, but it should affect *active* flexion far more than passive.
+
+**Three checks that separate these, in order:**
+
+| Check | How | Reading |
+|---|---|---|
+| **Stroke test — do it now, both knees** | As specified in the context document, Section 6 | Any effusion → intra-articular; meniscus leads; note the ~24 h timing as reactive. Dry → guarding or block. |
+| **Active vs. passive flexion** | Sit on a chair edge; let the leg hang, then pull the heel back with the other foot or a hand — no hamstring effort | Passive bend equally limited → effusion or block (structural). Passive bend clearly easier than active → pain-inhibited hamstring, consistent with the insertional picture. |
+| **Character of the stop** | Slowly bend to the limit, once — do not force it | Diffuse tightness/fullness that yields slightly → effusion. A distinct springy stop at one angle → displaced tissue. Sharp lateral pain with no real stop → guarding. |
+
+**Escalation rules:**
+- **Any effusion** → all Phase 1 loading on hold; this is the finding that reorders the differential and it belongs in front of the physician with the MRI request.
+- **A true mechanical block** (springy stop, or the knee catches/locks) → this stops being a "this week" imaging request and becomes a **prompt orthopedic contact** — displaced meniscal tissue is time-sensitive for repairability, and forcing motion against a block risks extending the tear.
+- **Passive motion fine, active flexion weak/painful** → no escalation; it corroborates the insertional/pain-inhibition picture and the existing timeline stands.
+
+Either way, this progression strengthens the argument for getting the film and MRI **this week, not after seeing how the weekend goes**. Do not force flexion, do not test it repeatedly through the day, and keep walking as tolerated without pushing through a block.
+
 ### Other pending discriminators
 
 - **Figure-4 palpation, three points ~2 cm apart:** fibular head (+ A-P translation) → PTFJ/insertional; boggy or discontinuous LCL midsubstance cord → LCL; lateral joint line + positive Thessaly at 20° → meniscus.
