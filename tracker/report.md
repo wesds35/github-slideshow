@@ -6,11 +6,11 @@ _Generated 2026-08-15 — 84 day(s) of data. All intervals are 95% credible inte
 
 ### Nicotine
 
-Only 0 logged day(s) — log a few more.
+Only 1 logged day(s) — log a few more.
 
 ### Porn
 
-Only 0 logged day(s) — log a few more.
+Only 1 logged day(s) — log a few more.
 
 ## Metrics
 
@@ -23,12 +23,12 @@ Only 0 logged day(s) — log a few more.
 
 ### Reading
 
-Only 0 logged day(s) — need at least 3.
+Only 1 logged day(s) — need at least 3.
 
 ### Expenses
 
-Only 0 logged day(s) — need at least 3.
+Only 1 logged day(s) — need at least 3.
 
 ### Income
 
-Only 0 logged day(s) — need at least 3.
+Only 1 logged day(s) — need at least 3.
