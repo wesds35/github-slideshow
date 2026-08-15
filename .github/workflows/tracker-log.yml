@@ -1,0 +1,81 @@
+name: Tracker quick log
+
+# Manual daily log from anywhere — including the GitHub mobile app:
+# repo -> Actions -> "Tracker quick log" -> Run workflow, fill the fields.
+# Covers the inputs that can't be automated (nicotine, porn, reading).
+
+on:
+  workflow_dispatch:
+    inputs:
+      nicotine:
+        description: "Nicotine today?"
+        type: choice
+        options: ["no", "yes", "skip"]
+        default: "no"
+      porn:
+        description: "Porn today?"
+        type: choice
+        options: ["no", "yes", "skip"]
+        default: "no"
+      reading_minutes:
+        description: "Minutes read (blank to skip)"
+        required: false
+      date:
+        description: "Date YYYY-MM-DD (blank = today)"
+        required: false
+      notes:
+        description: "Notes"
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tracker-data
+  cancel-in-progress: false
+
+jobs:
+  log:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tracker/requirements.txt
+
+      - run: pip install -r tracker/requirements.txt
+
+      - name: Log entry
+        env:
+          IN_NICOTINE: ${{ github.event.inputs.nicotine }}
+          IN_PORN: ${{ github.event.inputs.porn }}
+          IN_READING: ${{ github.event.inputs.reading_minutes }}
+          IN_DATE: ${{ github.event.inputs.date }}
+          IN_NOTES: ${{ github.event.inputs.notes }}
+        run: |
+          args=()
+          [ "$IN_NICOTINE" != "skip" ] && args+=(--nicotine "$IN_NICOTINE")
+          [ "$IN_PORN" != "skip" ] && args+=(--porn "$IN_PORN")
+          [ -n "$IN_READING" ] && args+=(--reading "$IN_READING")
+          [ -n "$IN_DATE" ] && args+=(--date "$IN_DATE")
+          [ -n "$IN_NOTES" ] && args+=(--notes "$IN_NOTES")
+          python tracker/track.py log "${args[@]}"
+
+      - name: Rebuild report
+        run: python tracker/track.py report
+
+      - name: Commit and push
+        run: |
+          git config user.name "tracker-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add tracker/data tracker/report.md
+          if git diff --cached --quiet; then
+            echo "No changes."
+          else
+            git commit -m "tracker: log $(date -u +%F)"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin "${GITHUB_REF_NAME}"
+          fi
