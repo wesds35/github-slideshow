@@ -30,11 +30,25 @@ python -m unittest financial_ranking.test_ranker
 
    | Category | Metrics (default weights within category) |
    |---|---|
-   | Profitability (30%) | ROE 35%, net margin 35%, ROA 30% |
-   | Growth (25%) | revenue growth 50%, EPS growth 50% |
+   | Profitability (30%) | ROE 25%, net margin 25%, ROA 15%, 5-year avg ROE 20%, margin volatility 15% (lower = better) |
+   | Growth (25%) | revenue growth 40%, EPS growth 25%, revenue acceleration 35% |
    | Financial health (20%) | current ratio 40%, debt/equity 40% (lower = better), interest coverage 20% |
    | Efficiency (15%) | asset turnover 60%, FCF margin 40% |
-   | Valuation (10%) | P/E 60%, EV/EBITDA 40% (lower = better) |
+   | Valuation (10%) | P/E 25%, EV/EBITDA 10%, PEG 20% (all lower = better), FCF yield 25%, actual-minus-implied growth 20% |
+
+   Three metric groups deserve explanation:
+
+   - **Consistency** (`roe_5y_avg`, `margin_volatility`) scores multi-year
+     durability, so one great year can't masquerade as a solid company.
+   - **Acceleration** (`revenue_acceleration`) is the change in the YoY
+     quarterly growth rate — a leading indicator of whether growth is
+     speeding up or rolling over.
+   - **Growth-adjusted valuation** (`peg_ratio`, `fcf_yield`,
+     `growth_vs_implied`) asks whether the price is fair *for this growth
+     rate*. `growth_vs_implied` runs a reverse DCF: it solves for the FCF
+     growth rate the current market cap implies (10% discount, 10-year
+     horizon, 2.5% terminal growth) and reports actual growth minus that.
+     Negative = priced for more growth than the company is delivering.
 
 2. **Winsorize** — each metric is clamped to its 5th–95th percentile
    across the peer group to tame outliers.
@@ -92,22 +106,30 @@ Per SEC fair-access policy, send a descriptive `User-Agent` (set
 `USER_AGENT` in `sec_edgar.py` to your name/email) and stay under ~10
 requests/second.
 
-`sec_edgar.py` derives profitability, growth, health, and efficiency
-metrics from each registrant's last two fiscal years of 10-K data.
-Valuation metrics (P/E, EV/EBITDA) need market prices, which filings
-don't contain — those metrics are simply omitted and the ranker's
-missing-data handling takes over. Non-US companies and market data need
-other sources (e.g. [SimFin](https://simfin.com/) free tier, the
-[S&P 500 financials dataset](https://datahub.io/core/s-and-p-500-companies-financials),
-or [Finnhub](https://finnhub.io/)'s free API), but none are as complete
-or current as EDGAR for US fundamentals.
+`sec_edgar.py` builds **trailing-twelve-month (TTM)** flow metrics by
+combining the latest 10-K with 10-Q stub quarters (FY + new quarters −
+their year-ago counterparts), so scores reflect the most recent four
+quarters instead of a fiscal year that may be nearly a year stale.
+Balance-sheet metrics use the latest reported instant from any filing.
+Quarterly history also feeds revenue acceleration, and the full annual
+history feeds the 5-year consistency metrics.
+
+Market prices come from `market_data.py` (Yahoo Finance's public chart
+endpoint — free, no API key, delayed quotes), combined with share counts
+from the filings to compute market cap and the valuation metrics. Pass
+`--no-price` to skip the lookup; any missing price simply omits those
+metrics and the ranker's weight renormalization takes over. Non-US
+companies need other sources (e.g. [SimFin](https://simfin.com/) free
+tier or [Finnhub](https://finnhub.io/)'s free API), but none are as
+complete or current as EDGAR for US fundamentals.
 
 ## Files
 
 | File | Purpose |
 |---|---|
 | `ranker.py` | Core algorithm: metrics, weights, robust scoring, ranking |
-| `sec_edgar.py` | Live data source: SEC EDGAR XBRL company-facts API |
+| `sec_edgar.py` | Live data source: EDGAR XBRL facts → TTM, acceleration, consistency, valuation |
+| `market_data.py` | Free price quotes (Yahoo chart API) and reverse-DCF implied growth |
 | `sample_data.csv` | Bundled 10-company sample dataset (illustrative figures) |
 | `__main__.py` | CLI entry point |
 | `test_ranker.py` | Unit tests (`python -m unittest financial_ranking.test_ranker`) |

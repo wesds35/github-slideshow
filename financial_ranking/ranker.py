@@ -59,13 +59,20 @@ class Metric:
 # Default metric set. Weights are *within* a category and are renormalized
 # at runtime, so they only need to be meaningful relative to each other.
 DEFAULT_METRICS: tuple[Metric, ...] = (
-    # Profitability
-    Metric("roe", "Return on equity (%)", "profitability", 0.35),
-    Metric("net_margin", "Net profit margin (%)", "profitability", 0.35),
-    Metric("roa", "Return on assets (%)", "profitability", 0.30),
-    # Growth
-    Metric("revenue_growth", "Revenue growth YoY (%)", "growth", 0.50),
-    Metric("eps_growth", "EPS growth YoY (%)", "growth", 0.50),
+    # Profitability & quality. Point-in-time returns plus multi-year
+    # consistency: a durable 20% ROE beats one great year.
+    Metric("roe", "Return on equity (%)", "profitability", 0.25),
+    Metric("net_margin", "Net profit margin (%)", "profitability", 0.25),
+    Metric("roa", "Return on assets (%)", "profitability", 0.15),
+    Metric("roe_5y_avg", "5-year average ROE (%)", "profitability", 0.20),
+    Metric("margin_volatility", "Net margin volatility, 5y stdev (pp)",
+           "profitability", 0.15, higher_is_better=False),
+    # Growth. Acceleration (change in YoY growth rate) is a leading
+    # indicator: is growth speeding up or slowing down?
+    Metric("revenue_growth", "Revenue growth YoY (%)", "growth", 0.40),
+    Metric("eps_growth", "EPS growth YoY (%)", "growth", 0.25),
+    Metric("revenue_acceleration", "Revenue growth acceleration (pp)",
+           "growth", 0.35),
     # Financial health (liquidity & solvency)
     Metric("current_ratio", "Current ratio", "financial_health", 0.40),
     Metric("debt_to_equity", "Debt to equity", "financial_health", 0.40,
@@ -74,11 +81,18 @@ DEFAULT_METRICS: tuple[Metric, ...] = (
     # Efficiency
     Metric("asset_turnover", "Asset turnover (x)", "efficiency", 0.60),
     Metric("fcf_margin", "Free cash flow margin (%)", "efficiency", 0.40),
-    # Valuation (cheaper = better)
-    Metric("pe_ratio", "Price/earnings", "valuation", 0.60,
+    # Valuation: price relative to earnings, cash, and growth. PEG and
+    # the reverse-DCF gap ask "is the price fair FOR this growth rate",
+    # so fast growers aren't punished by raw multiples alone.
+    Metric("pe_ratio", "Price/earnings (TTM)", "valuation", 0.25,
            higher_is_better=False),
-    Metric("ev_to_ebitda", "EV/EBITDA", "valuation", 0.40,
+    Metric("ev_to_ebitda", "EV/EBITDA", "valuation", 0.10,
            higher_is_better=False),
+    Metric("peg_ratio", "PEG (P/E over growth)", "valuation", 0.20,
+           higher_is_better=False),
+    Metric("fcf_yield", "FCF yield (%)", "valuation", 0.25),
+    Metric("growth_vs_implied", "Actual minus DCF-implied growth (pp)",
+           "valuation", 0.20),
 )
 
 # Default category weights for the composite score. Must sum to 1.0 (they

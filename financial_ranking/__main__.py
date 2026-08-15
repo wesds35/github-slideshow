@@ -31,11 +31,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--edgar", nargs="+", metavar="TICKER",
                         help="fetch live fundamentals for these tickers from "
                              "SEC EDGAR instead of reading a CSV")
+    parser.add_argument("--no-price", action="store_true",
+                        help="skip market-price lookups (valuation metrics "
+                             "will be omitted)")
     args = parser.parse_args(argv)
 
     if args.edgar:
         from .sec_edgar import companies_from_edgar
-        companies = companies_from_edgar(args.edgar)
+        companies = companies_from_edgar(args.edgar, fetch_price=not args.no_price)
     else:
         companies = load_companies_from_csv(args.csv)
 
