@@ -34,6 +34,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--no-price", action="store_true",
                         help="skip market-price lookups (valuation metrics "
                              "will be omitted)")
+    parser.add_argument("--sector-relative", action="store_true",
+                        help="standardize each company against its sector "
+                             "peers instead of the whole universe")
     args = parser.parse_args(argv)
 
     if args.edgar:
@@ -42,7 +45,9 @@ def main(argv: list[str] | None = None) -> int:
     else:
         companies = load_companies_from_csv(args.csv)
 
-    ranker = FinancialRanker.from_profile(args.profile)
+    ranker = FinancialRanker.from_profile(
+        args.profile, sector_relative=args.sector_relative
+    )
     results = ranker.rank(companies)
 
     print(f"Weight profile: {args.profile}")

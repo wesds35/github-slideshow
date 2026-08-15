@@ -242,6 +242,63 @@ class EdgarDerivationTests(unittest.TestCase):
         self.assertIsNone(_acceleration(periods))
 
 
+class SectorRelativeTests(unittest.TestCase):
+    @staticmethod
+    def _companies():
+        # Banks structurally report low ROA; universe-wide scoring buries
+        # them, sector-relative scoring judges them against each other.
+        return [
+            Company("BANK1", "Best Bank", {"roa": 1.6}, sector="financials"),
+            Company("BANK2", "Mid Bank", {"roa": 1.1}, sector="financials"),
+            Company("BANK3", "Weak Bank", {"roa": 0.7}, sector="financials"),
+            Company("TECH1", "Big Tech", {"roa": 25.0}, sector="technology"),
+            Company("TECH2", "Mid Tech", {"roa": 18.0}, sector="technology"),
+            Company("TECH3", "Small Tech", {"roa": 12.0}, sector="technology"),
+        ]
+
+    @staticmethod
+    def _ranker(**kwargs):
+        metrics = (Metric("roa", "ROA", "profitability", 1.0),)
+        return FinancialRanker(metrics=metrics,
+                               category_weights={"profitability": 1.0},
+                               winsor_pcts=(0.0, 1.0), **kwargs)
+
+    def test_best_bank_scores_high_within_sector(self):
+        universe = {r.ticker: r for r in self._ranker().rank(self._companies())}
+        sectored = {r.ticker: r
+                    for r in self._ranker(sector_relative=True).rank(self._companies())}
+        # Universe-wide, even the best bank sits in the bottom half.
+        self.assertLess(universe["BANK1"].composite_score, 50.0)
+        # Sector-relative, the best bank beats the weakest tech company.
+        self.assertGreater(sectored["BANK1"].composite_score, 50.0)
+        self.assertGreater(sectored["BANK1"].composite_score,
+                           sectored["TECH3"].composite_score)
+
+    def test_small_sectors_pool_together(self):
+        companies = [
+            Company("A", "A", {"roa": 5.0}, sector="utilities"),   # lone member
+            Company("B", "B", {"roa": 10.0}, sector=None),
+            Company("C", "C", {"roa": 2.0}, sector=None),
+        ]
+        results = self._ranker(sector_relative=True,
+                               min_sector_peers=3).rank(companies)
+        by_ticker = {r.ticker: r for r in results}
+        # All three pooled into one group: B best, C worst.
+        self.assertGreater(by_ticker["B"].composite_score,
+                           by_ticker["A"].composite_score)
+        self.assertGreater(by_ticker["A"].composite_score,
+                           by_ticker["C"].composite_score)
+
+    def test_sic_mapping(self):
+        from financial_ranking.sec_edgar import sic_to_sector
+        self.assertEqual(sic_to_sector(6022), "financials")   # state banks
+        self.assertEqual(sic_to_sector(7372), "technology")   # software
+        self.assertEqual(sic_to_sector(4911), "utilities")
+        self.assertEqual(sic_to_sector(2836), "healthcare")   # biologics
+        self.assertEqual(sic_to_sector(3674), "technology")   # semiconductors
+        self.assertIsNone(sic_to_sector(None))
+
+
 class CsvLoadingTests(unittest.TestCase):
     def test_sample_csv_loads_with_missing_cells(self):
         companies = load_companies_from_csv(SAMPLE_CSV)
@@ -249,6 +306,12 @@ class CsvLoadingTests(unittest.TestCase):
         jpm = next(c for c in companies if c.ticker == "JPM")
         self.assertNotIn("current_ratio", jpm.metrics)   # blank cell in CSV
         self.assertIn("roe", jpm.metrics)
+
+    def test_sector_column_not_a_metric(self):
+        companies = load_companies_from_csv(SAMPLE_CSV)
+        jpm = next(c for c in companies if c.ticker == "JPM")
+        self.assertEqual(jpm.sector, "financials")
+        self.assertNotIn("sector", jpm.metrics)
 
 
 if __name__ == "__main__":

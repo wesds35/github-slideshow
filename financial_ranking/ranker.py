@@ -144,6 +144,7 @@ class Company:
     ticker: str
     name: str
     metrics: dict[str, float] = field(default_factory=dict)
+    sector: str | None = None
 
 
 @dataclass
@@ -157,6 +158,7 @@ class ScoredCompany:
     category_scores: dict[str, float]      # category -> 0-100
     metric_zscores: dict[str, float]       # metric key -> directed z-score
     data_coverage: float                   # fraction of metrics reported
+    sector: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -236,6 +238,13 @@ class FinancialRanker:
     winsor_pcts:
         (lower, upper) percentile bounds used to clamp outliers before
         standardization. Set to (0.0, 1.0) to disable winsorization.
+    sector_relative:
+        When True, z-scores are computed within each company's sector
+        peer group instead of the whole universe, so a bank is judged
+        against banks and a utility against utilities. Sectors with fewer
+        than `min_sector_peers` members (and companies with no sector)
+        are pooled and scored against each other; a pooled group of one
+        scores at the peer average.
     """
 
     def __init__(
@@ -243,6 +252,8 @@ class FinancialRanker:
         metrics: Iterable[Metric] = DEFAULT_METRICS,
         category_weights: Mapping[str, float] | None = None,
         winsor_pcts: tuple[float, float] = (0.05, 0.95),
+        sector_relative: bool = False,
+        min_sector_peers: int = 3,
     ) -> None:
         self.metrics: list[Metric] = list(metrics)
         if not self.metrics:
@@ -268,6 +279,11 @@ class FinancialRanker:
             raise ValueError("winsor_pcts must satisfy 0 <= lower < upper <= 1")
         self.winsor_pcts = winsor_pcts
 
+        if min_sector_peers < 2:
+            raise ValueError("min_sector_peers must be at least 2")
+        self.sector_relative = sector_relative
+        self.min_sector_peers = min_sector_peers
+
     @classmethod
     def from_profile(cls, profile: str, **kwargs) -> "FinancialRanker":
         """Build a ranker from a named weight profile (see WEIGHT_PROFILES)."""
@@ -278,6 +294,29 @@ class FinancialRanker:
         return cls(category_weights=WEIGHT_PROFILES[profile], **kwargs)
 
     # -- pipeline steps ----------------------------------------------------
+
+    def _peer_groups(self, companies: Sequence[Company]) -> list[list[Company]]:
+        """Partition into sector peer groups for standardization.
+
+        Sectors with at least `min_sector_peers` members form their own
+        group; everyone else (small sectors, no sector) is pooled into a
+        single leftover group.
+        """
+        if not self.sector_relative:
+            return [list(companies)]
+        by_sector: dict[str, list[Company]] = {}
+        for company in companies:
+            by_sector.setdefault(company.sector or "", []).append(company)
+        groups: list[list[Company]] = []
+        leftover: list[Company] = []
+        for sector, members in by_sector.items():
+            if sector and len(members) >= self.min_sector_peers:
+                groups.append(members)
+            else:
+                leftover.extend(members)
+        if leftover:
+            groups.append(leftover)
+        return groups
 
     def _directed_zscores(self, companies: Sequence[Company]) -> dict[str, dict[str, float]]:
         """Per-metric peer-relative z-scores, flipped so higher = better.
@@ -336,7 +375,10 @@ class FinancialRanker:
         if len(set(tickers)) != len(tickers):
             raise ValueError("duplicate tickers in peer group")
 
-        zscores = self._directed_zscores(companies)
+        zscores: dict[str, dict[str, float]] = {}
+        for group in self._peer_groups(companies):
+            for key, values in self._directed_zscores(group).items():
+                zscores.setdefault(key, {}).update(values)
         categories = list(self.category_weights)
 
         scored: list[ScoredCompany] = []
@@ -372,6 +414,7 @@ class FinancialRanker:
                         if m.key in zscores and company.ticker in zscores[m.key]
                     },
                     data_coverage=round(reported / len(self.metrics), 3),
+                    sector=company.sector,
                 )
             )
 
@@ -391,7 +434,8 @@ class FinancialRanker:
 def load_companies_from_csv(path: str) -> list[Company]:
     """Load companies from a CSV with `ticker`, `name`, and metric columns.
 
-    Empty cells are treated as missing metrics; non-numeric cells raise.
+    An optional `sector` column feeds sector-relative scoring. Empty
+    cells are treated as missing metrics; non-numeric cells raise.
     """
     companies: list[Company] = []
     with open(path, newline="", encoding="utf-8") as handle:
@@ -403,25 +447,31 @@ def load_companies_from_csv(path: str) -> list[Company]:
             if not ticker:
                 continue
             name = (row.get("name") or ticker).strip()
+            sector = (row.get("sector") or "").strip() or None
             metrics: dict[str, float] = {}
             for column, cell in row.items():
-                if column in ("ticker", "name") or cell is None:
+                if column in ("ticker", "name", "sector") or cell is None:
                     continue
                 cell = cell.strip()
                 if cell == "":
                     continue
                 metrics[column] = float(cell)
-            companies.append(Company(ticker=ticker, name=name, metrics=metrics))
+            companies.append(Company(ticker=ticker, name=name,
+                                     metrics=metrics, sector=sector))
     return companies
 
 
 def format_report(results: Sequence[ScoredCompany], category_weights: Mapping[str, float]) -> str:
     """Render results as a plain-text leaderboard table."""
     categories = list(category_weights)
+    show_sector = any(entry.sector for entry in results)
+    sector_header = f"{'Sector':<14}" if show_sector else ""
     header_cats = "  ".join(f"{c[:12]:>12}" for c in categories)
     lines = [
-        f"{'#':>3}  {'Ticker':<8}{'Company':<28}{'Score':>7}  {header_cats}  {'Coverage':>8}",
-        "-" * (3 + 2 + 8 + 28 + 7 + 2 + 14 * len(categories) + 2 + 8),
+        f"{'#':>3}  {'Ticker':<8}{'Company':<28}{sector_header}{'Score':>7}  "
+        f"{header_cats}  {'Coverage':>8}",
+        "-" * (3 + 2 + 8 + 28 + len(sector_header) + 7 + 2
+               + 14 * len(categories) + 2 + 8),
     ]
     for entry in results:
         cat_cells = "  ".join(
@@ -429,8 +479,9 @@ def format_report(results: Sequence[ScoredCompany], category_weights: Mapping[st
             else f"{'—':>12}"
             for c in categories
         )
+        sector_cell = f"{(entry.sector or '')[:13]:<14}" if show_sector else ""
         lines.append(
-            f"{entry.rank:>3}  {entry.ticker:<8}{entry.name[:27]:<28}"
+            f"{entry.rank:>3}  {entry.ticker:<8}{entry.name[:27]:<28}{sector_cell}"
             f"{entry.composite_score:>7.1f}  {cat_cells}  {entry.data_coverage:>7.0%}"
         )
     return "\n".join(lines)

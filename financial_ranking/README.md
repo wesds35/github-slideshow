@@ -20,6 +20,9 @@ python -m financial_ranking --csv my_peers.csv
 # Rank on LIVE fundamentals pulled from SEC EDGAR (free, no API key)
 python -m financial_ranking --edgar AAPL MSFT NVDA JNJ WMT
 
+# Judge each company against its sector peers instead of the whole universe
+python -m financial_ranking --edgar AAPL JPM XOM NEE BAC --sector-relative
+
 # Run the tests
 python -m unittest financial_ranking.test_ranker
 ```
@@ -68,6 +71,20 @@ python -m unittest financial_ranking.test_ranker
 Because scoring is peer-relative, rank companies against a sensible peer
 group (same sector/size) for the most meaningful results — a bank's
 current ratio and a retailer's asset turnover aren't comparable.
+
+### Sector-relative scoring
+
+With `sector_relative=True` (CLI: `--sector-relative`), z-scores are
+computed within each company's sector peer group — banks against banks,
+utilities against utilities — so structurally different balance sheets
+stop distorting cross-sector comparisons. Sectors come from each
+registrant's SIC code (EDGAR submissions API) mapped to coarse buckets
+(technology, healthcare, financials, energy, utilities, consumer,
+industrials, materials, communications), or from an optional `sector` CSV
+column. Sectors with fewer than `min_sector_peers` members (default 3)
+are pooled and scored against each other. A company's composite then
+answers "how strong is it *for its sector*", making cross-sector ranks
+comparable on a level footing.
 
 ### Custom weights
 

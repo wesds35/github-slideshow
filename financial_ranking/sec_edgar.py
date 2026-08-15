@@ -43,7 +43,53 @@ from .ranker import Company
 
 USER_AGENT = "financial-ranking-demo contact@example.com"
 COMPANY_FACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json"
+SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
 TICKER_MAP_URL = "https://www.sec.gov/files/company_tickers.json"
+
+# Coarse SIC-code ranges -> sector buckets used for sector-relative
+# scoring. Deliberately broad: the goal is comparable peer groups
+# (banks vs banks, utilities vs utilities), not GICS fidelity.
+_SIC_SECTORS: tuple[tuple[int, int, str], ...] = (
+    (100, 1000, "consumer"),        # agriculture
+    (1000, 1500, "energy"),         # mining, oil & gas extraction
+    (1500, 1800, "industrials"),    # construction
+    (2000, 2400, "consumer"),       # food, beverage, tobacco, textiles
+    (2400, 2800, "materials"),      # lumber, paper, printing
+    (2800, 2830, "materials"),      # industrial chemicals
+    (2830, 2840, "healthcare"),     # pharmaceuticals
+    (2840, 2911, "consumer"),       # soaps, cosmetics
+    (2911, 3000, "energy"),         # petroleum refining
+    (3000, 3400, "materials"),      # rubber, glass, metals
+    (3400, 3570, "industrials"),    # fabricated metal, machinery
+    (3570, 3580, "technology"),     # computers & office equipment
+    (3580, 3600, "industrials"),
+    (3600, 3700, "technology"),     # electronics, semiconductors
+    (3700, 3800, "industrials"),    # autos, aerospace, defense
+    (3800, 3840, "technology"),     # instruments, photo, optics
+    (3840, 3860, "healthcare"),     # medical devices
+    (3860, 4000, "industrials"),
+    (4000, 4800, "industrials"),    # transport
+    (4800, 4900, "communications"), # telecom, broadcasting
+    (4900, 5000, "utilities"),
+    (5000, 5200, "consumer"),       # wholesale
+    (5200, 6000, "consumer"),       # retail
+    (6000, 6800, "financials"),     # banks, insurance, real estate
+    (6800, 7370, "consumer"),       # services (hotels, personal)
+    (7370, 7380, "technology"),     # software & computer services
+    (7380, 8000, "consumer"),       # misc services
+    (8000, 8100, "healthcare"),     # health services
+    (8100, 10000, "industrials"),   # professional services, other
+)
+
+
+def sic_to_sector(sic: int | None) -> str | None:
+    """Map an SIC code to a coarse sector bucket."""
+    if sic is None:
+        return None
+    for lo, hi, sector in _SIC_SECTORS:
+        if lo <= sic < hi:
+            return sector
+    return None
 
 # Concept fallbacks: companies tag the same idea with different us-gaap tags.
 REVENUE_TAGS = (
@@ -281,19 +327,33 @@ def _shares_outstanding(facts: dict) -> float | None:
 # ---------------------------------------------------------------------------
 
 
+def _fetch_sector(cik: int) -> str | None:
+    """Sector bucket from the registrant's SIC code (submissions API)."""
+    try:
+        submissions = _get_json(SUBMISSIONS_URL.format(cik=cik))
+        sic = submissions.get("sic")
+        return sic_to_sector(int(sic)) if sic else None
+    except Exception:  # noqa: BLE001 - sector is best-effort enrichment
+        return None
+
+
 def company_from_edgar(ticker: str, cik: int | None = None,
-                       fetch_price: bool = True) -> Company:
+                       fetch_price: bool = True,
+                       fetch_sector: bool = True) -> Company:
     """Build a ranker Company from a registrant's XBRL facts.
 
     Flow metrics use trailing-twelve-month values (10-K plus 10-Q stubs);
     balance-sheet metrics use the latest reported instant. Valuation
     metrics are added when a market price is available and are omitted
-    otherwise; anything that cannot be derived is simply left out.
+    otherwise; anything that cannot be derived is simply left out. The
+    company's sector bucket comes from its SIC code for sector-relative
+    scoring.
     """
     if cik is None:
         cik = ticker_to_cik(ticker)
     facts = _get_json(COMPANY_FACTS_URL.format(cik=cik))
     name = facts.get("entityName", ticker)
+    sector = _fetch_sector(cik) if fetch_sector else None
 
     revenue = _first_tag_flows(facts, REVENUE_TAGS)
     net_income = _flow_entries(facts, "NetIncomeLoss")
@@ -369,7 +429,8 @@ def company_from_edgar(ticker: str, cik: int | None = None,
                 if implied is not None and growth is not None:
                     metrics["growth_vs_implied"] = round(growth - implied, 4)
 
-    return Company(ticker=ticker.upper(), name=name, metrics=metrics)
+    return Company(ticker=ticker.upper(), name=name, metrics=metrics,
+                   sector=sector)
 
 
 def companies_from_edgar(tickers: list[str], pause_seconds: float = 0.15,
