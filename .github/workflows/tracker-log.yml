@@ -7,11 +7,10 @@ name: Tracker quick log
 on:
   workflow_dispatch:
     inputs:
-      nicotine:
-        description: "Nicotine today?"
-        type: choice
-        options: ["no", "yes", "skip"]
-        default: "no"
+      nicotine_mg:
+        description: "Nicotine mg (0 = none, blank to skip)"
+        default: "0"
+        required: false
       porn:
         description: "Porn today?"
         type: choice
@@ -50,14 +49,14 @@ jobs:
 
       - name: Log entry
         env:
-          IN_NICOTINE: ${{ github.event.inputs.nicotine }}
+          IN_NICOTINE: ${{ github.event.inputs.nicotine_mg }}
           IN_PORN: ${{ github.event.inputs.porn }}
           IN_READING: ${{ github.event.inputs.reading_minutes }}
           IN_DATE: ${{ github.event.inputs.date }}
           IN_NOTES: ${{ github.event.inputs.notes }}
         run: |
           args=()
-          [ "$IN_NICOTINE" != "skip" ] && args+=(--nicotine "$IN_NICOTINE")
+          [ -n "$IN_NICOTINE" ] && args+=(--nicotine "$IN_NICOTINE")
           [ "$IN_PORN" != "skip" ] && args+=(--porn "$IN_PORN")
           [ -n "$IN_READING" ] && args+=(--reading "$IN_READING")
           [ -n "$IN_DATE" ] && args+=(--date "$IN_DATE")

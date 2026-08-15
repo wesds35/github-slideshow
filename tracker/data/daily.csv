@@ -1,4 +1,4 @@
-date,sleep_hours,sleep_score,nicotine,porn,reading_minutes,expenses,income,notes
+date,sleep_hours,sleep_score,nicotine_mg,porn,reading_minutes,expenses,income,notes
 2026-05-17,8.74,93,,,,,,
 2026-05-18,6.75,80,,,,,,
 2026-05-19,6.83,79,,,,,,
@@ -82,4 +82,4 @@ date,sleep_hours,sleep_score,nicotine,porn,reading_minutes,expenses,income,notes
 2026-08-11,3.54,66,,,,,,
 2026-08-12,8.04,88,,,,,,
 2026-08-13,3.17,60,,,,,,
-2026-08-14,7.15,85,1,1,10.0,8.64,150.0,nicotine 36mg; porn 10 min w/ masturbation
+2026-08-14,7.15,85,36,1,10.0,8.64,150.0,nicotine 36mg; porn 10 min w/ masturbation

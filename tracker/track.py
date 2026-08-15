@@ -28,16 +28,20 @@ from bayes import model
 DATA = Path(__file__).parent / "data" / "daily.csv"
 REPORT = Path(__file__).parent / "report.md"
 
-FIELDS = ["date", "sleep_hours", "sleep_score", "nicotine", "porn",
+FIELDS = ["date", "sleep_hours", "sleep_score", "nicotine_mg", "porn",
           "reading_minutes", "expenses", "income", "notes"]
 
-BINARY = ["nicotine", "porn"]
+# Habits reported as use/no-use: (label, column). A numeric column counts
+# as "use" when its value is > 0, so nicotine frequency comes from mg.
+BINARY = [("Nicotine", "nicotine_mg"), ("Porn", "porn")]
+
 CONTINUOUS = {
-    # column -> (label, unit, higher_is_better)
-    "sleep_hours": ("Sleep", "h", True),
-    "reading_minutes": ("Reading", "min", True),
-    "expenses": ("Expenses", "$", False),
-    "income": ("Income", "$", True),
+    # column -> (label, unit, higher_is_better, nonzero_only)
+    "sleep_hours": ("Sleep", "h", True, False),
+    "nicotine_mg": ("Nicotine dose (use days)", "mg", False, True),
+    "reading_minutes": ("Reading", "min", True, False),
+    "expenses": ("Expenses", "$", False, False),
+    "income": ("Income", "$", True, False),
 }
 
 
@@ -99,7 +103,7 @@ def cmd_log(args) -> None:
         return 1 if str(v).strip().lower() in ("1", "y", "yes", "true") else 0
 
     upsert(rows, day, {
-        "nicotine": yn(args.nicotine),
+        "nicotine_mg": args.nicotine,
         "porn": yn(args.porn),
         "reading_minutes": args.reading,
         "sleep_hours": args.sleep,
@@ -184,13 +188,13 @@ def cmd_report(args) -> None:
 
     # Binary habits
     lines += ["## Habits", ""]
-    for col in BINARY:
+    for label, col in BINARY:
         events = []
         for day, row in rows.items():
             x = _b(row, col)
             if x is not None:
                 events.append((date.fromisoformat(day), x))
-        lines.append(f"### {col.capitalize()}")
+        lines.append(f"### {label}")
         if len(events) < 3:
             lines += ["", f"Only {len(events)} logged day(s) — log a few more.", ""]
             continue
@@ -208,11 +212,11 @@ def cmd_report(args) -> None:
 
     # Continuous metrics
     lines += ["## Metrics", ""]
-    for col, (label, unit, hib) in CONTINUOUS.items():
+    for col, (label, unit, hib, nonzero_only) in CONTINUOUS.items():
         points = []
         for day, row in rows.items():
             v = _f(row, col)
-            if v is not None:
+            if v is not None and not (nonzero_only and v <= 0):
                 points.append((date.fromisoformat(day), v))
         lines.append(f"### {label}")
         s = model.continuous_summary(points, today, higher_is_better=hib)
@@ -244,7 +248,7 @@ def cmd_report(args) -> None:
         if v is not None:
             sleep[date.fromisoformat(day)] = v
     inter_lines = []
-    for col in BINARY:
+    for label, col in BINARY:
         habit = {}
         for day, row in rows.items():
             x = _b(row, col)
@@ -253,7 +257,7 @@ def cmd_report(args) -> None:
         s = model.conditional_habit_on_sleep(habit, sleep)
         if s:
             inter_lines.append(
-                f"- **{col.capitalize()}** after short sleep (<{s['threshold']}h): "
+                f"- **{label}** after short sleep (<{s['threshold']}h): "
                 f"{_pct(s['p_habit_short_sleep'])} vs {_pct(s['p_habit_ok_sleep'])} "
                 f"after decent sleep — P(short sleep makes it worse) = "
                 f"{_pct(s['p_short_sleep_worse'])}")
@@ -273,7 +277,7 @@ def main() -> None:
 
     lg = sub.add_parser("log", help="record manual fields for a day")
     lg.add_argument("--date", help="YYYY-MM-DD (default: today)")
-    lg.add_argument("--nicotine", help="y/n")
+    lg.add_argument("--nicotine", type=float, help="mg (0 = none)")
     lg.add_argument("--porn", help="y/n")
     lg.add_argument("--reading", type=float, help="minutes read")
     lg.add_argument("--sleep", type=float, help="hours (manual override)")

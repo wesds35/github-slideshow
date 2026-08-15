@@ -21,6 +21,10 @@ Only 1 logged day(s) — log a few more.
 - Last 14 days: 6.8 h vs baseline 6.6 h — flat (P(improving) = 64%)
 - Latest (2026-08-14): 7.2 h
 
+### Nicotine dose (use days)
+
+Only 1 logged day(s) — need at least 3.
+
 ### Reading
 
 Only 1 logged day(s) — need at least 3.

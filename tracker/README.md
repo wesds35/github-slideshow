@@ -6,7 +6,10 @@ day in `data/daily.csv`, and rebuilds `report.md` with Bayesian estimates:
 - **Nicotine / porn** — Beta-Bernoulli posterior with exponential recency
   weighting (half-life 21 days), so the "current use rate" follows behavior
   change instead of averaging your whole history. Trend = P(last-14-days
-  rate < baseline rate), plus your current clean streak.
+  rate < baseline rate), plus your current clean streak. Nicotine is
+  logged in **mg** (`--nicotine 36`, `0` = none): any mg > 0 counts as a
+  use day for the frequency model, and the dose on use days gets its own
+  continuous model so you can watch the amount trend down too.
 - **Sleep / reading / expenses / income** — Normal model with unknown mean
   and variance (Normal-Inverse-Gamma). Reports the credible interval for
   your true daily average, the "normal single-day range" (posterior
