@@ -33,18 +33,29 @@ Three input paths, so daily manual entry is mostly eliminated:
 
 ### 2. Banking (expenses / income)
 
-**Recommended: SimpleFIN Bridge** (~$1.50/mo, built for exactly this —
-read-only personal access without running your own Plaid app):
+**Plaid:**
 
-1. Sign up at <https://bridge.simplefin.org> and connect your bank(s).
-2. Create a setup token, then exchange it once:
-   `python tracker/track.py claim-simplefin <setup-token>`
-3. Save the printed URL as the `SIMPLEFIN_ACCESS_URL` repo secret.
-   (It's shown once — it can't be re-claimed.)
+1. Sign up at <https://dashboard.plaid.com> (free account; Transactions
+   in Production is pay-as-you-go with a small monthly fee per connected
+   bank). Grab your **client_id** and **Production secret** from
+   Developers → Keys.
+2. On your own computer, connect your bank with the included helper
+   (it runs Plaid's bank-login window locally and prints the token):
 
-**Alternative: Plaid** — if you have a Plaid developer account, set the
-`PLAID_CLIENT_ID`, `PLAID_SECRET`, `PLAID_ACCESS_TOKEN` secrets instead
-(and optionally a `PLAID_ENV` repo variable).
+   ```bash
+   pip install requests
+   python tracker/connectors/plaid_setup.py --client-id <ID> --secret <SECRET>
+   ```
+
+3. Add `PLAID_CLIENT_ID`, `PLAID_SECRET`, and the printed
+   `PLAID_ACCESS_TOKEN` as repo secrets.
+
+**Alternative: SimpleFIN Bridge** (~$1.50/mo, simpler and made for
+personal use): sign up at <https://bridge.simplefin.org>, connect your
+bank, create a setup token, exchange it once with
+`python tracker/track.py claim-simplefin <setup-token>`, and save the
+printed URL as the `SIMPLEFIN_ACCESS_URL` repo secret (it's shown once —
+it can't be re-claimed).
 
 Money flow is aggregated per day: total outflow → `expenses`, total
 inflow → `income`.
