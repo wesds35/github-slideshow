@@ -95,6 +95,17 @@ The walking detail is the informative one. Swing-phase knee flexion during walki
 
 Either way, this progression strengthens the argument for getting the film and MRI **this week, not after seeing how the weekend goes**. Do not force flexion, do not test it repeatedly through the day, and keep walking as tolerated without pushing through a block.
 
+### Imaging update (Aug 17): MRI obtained — formal read pending
+
+MRI completed; athlete has phone-captured sagittal **and coronal** slices from a screen recording. Non-diagnostic viewing conditions (unknown sequences, no scroll/windowing, not reviewed by a radiologist), but notes for the record:
+
+- Repeated cursor position and a conspicuous bright focus at the **lateral joint line in the meniscal region**, seen on mid-lateral sagittal slices **and again at the lateral joint line on the coronal series** — two planes, same neighborhood, and the location of the differential's co-leading candidate. On one sagittal frame the bright signal sits where the meniscal segment should be uniformly dark, and the adjacent dark triangle looks irregular/truncated. Could still be adjacent fluid, the normal popliteus hiatus, or partial-volume artifact; flagged for the formal read, not interpreted.
+- Far-lateral sagittal slice through the fibular head shows no obvious displaced fragment or retracted stump (low confidence, image quality limited).
+
+**Questions for the formal report:** (1) lateral meniscus posterior horn/root status and tear pattern/repairability; (2) discoid morphology; (3) biceps femoris/conjoined tendon insertion; (4) popliteus/PFL and adequacy of PLC evaluation; (5) effusion + bone-marrow-edema pattern on fluid-sensitive sequences; (6) fibular styloid marrow signal.
+
+**Action:** obtain the written report and DICOM access. All Gate 0 branch decisions (Section "Branch points") execute off the formal read.
+
 ### Other pending discriminators
 
 - **Figure-4 palpation, three points ~2 cm apart:** fibular head (+ A-P translation) → PTFJ/insertional; boggy or discontinuous LCL midsubstance cord → LCL; lateral joint line + positive Thessaly at 20° → meniscus.
