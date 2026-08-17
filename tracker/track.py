@@ -264,8 +264,113 @@ def cmd_report(args) -> None:
     if inter_lines:
         lines += ["## Does sleep drive the habits?", ""] + inter_lines + [""]
 
+    lines += _recent_table(rows)
+    lines += _projections(rows, today)
+
     REPORT.write_text("\n".join(lines))
     print(f"Wrote {REPORT}")
+
+
+def _recent_table(rows: dict[str, dict]) -> list[str]:
+    lines = ["## Last 7 days", "",
+             "| Date | Sleep h | Score | Nicotine mg | Porn | Reading min | Expenses | Income |",
+             "|---|---|---|---|---|---|---|---|"]
+    for day in sorted(rows)[-7:]:
+        r = rows[day]
+
+        def cell(key, money=False):
+            v = _f(r, key)
+            if v is None:
+                return "—"
+            return f"${v:,.2f}" if money else f"{v:g}"
+
+        porn = _b(r, "porn")
+        porn_s = "—" if porn is None else ("yes" if porn else "no")
+        lines.append(
+            f"| {day} | {cell('sleep_hours')} | {cell('sleep_score')} | "
+            f"{cell('nicotine_mg')} | {porn_s} | {cell('reading_minutes')} | "
+            f"{cell('expenses', True)} | {cell('income', True)} |")
+    return lines + [""]
+
+
+def _projections(rows: dict[str, dict], today: date) -> list[str]:
+    lines = ["## Projections", "",
+             "_Posterior-predictive forecasts from today's model. Ranges are "
+             "90% intervals — wide ranges mean the model is still uncertain, "
+             "and every logged day tightens them._", ""]
+
+    def values(col, max_age, nonzero=False):
+        out = []
+        for day, row in rows.items():
+            v = _f(row, col)
+            if v is None or (nonzero and v <= 0):
+                continue
+            if 0 <= (today - date.fromisoformat(day)).days < max_age:
+                out.append(v)
+        return out
+
+    def binary_events(col):
+        out = []
+        for day, row in rows.items():
+            x = _b(row, col)
+            if x is not None:
+                out.append((date.fromisoformat(day), x))
+        return out
+
+    def rng(p, fmt=lambda v: f"{v:.0f}"):
+        return f"**{fmt(p['mean'])}** ({fmt(p['lo'])}–{fmt(p['hi'])})"
+
+    money = lambda v: f"${max(v, 0):,.0f}"
+
+    # Nicotine: use days and total mg next 7 days.
+    nic_events = binary_events("nicotine_mg")
+    if len(nic_events) >= 3:
+        freq = model.discounted_beta(nic_events, today)
+        days7 = model.project_binary(freq, 7)
+        line = f"- **Nicotine, next 7 days:** {rng(days7)} use day(s)"
+        dose_vals = values("nicotine_mg", 60, nonzero=True)
+        dose_post = model.fit_nig(dose_vals) if len(dose_vals) >= 3 else None
+        if dose_post:
+            load = model.project_habit_load(freq, dose_post, 7)
+            line += f", totaling {rng(load, lambda v: f'{v:.0f} mg')}"
+        lines.append(line)
+
+    # Porn: use days next 7 days.
+    porn_events = binary_events("porn")
+    if len(porn_events) >= 3:
+        days7 = model.project_binary(model.discounted_beta(porn_events, today), 7)
+        lines.append(f"- **Porn, next 7 days:** {rng(days7)} use day(s)")
+
+    # Sleep: average over the next 7 nights.
+    sleep_post = model.fit_nig(values("sleep_hours", 30))
+    if sleep_post and sleep_post.k >= 3:
+        avg = model.project_continuous_mean(sleep_post, 7)
+        lines.append(f"- **Sleep, next 7 nights:** average "
+                     f"{rng(avg, lambda v: f'{v:.1f} h')} per night")
+
+    # Reading: total minutes next 7 days.
+    read_post = model.fit_nig(values("reading_minutes", 30))
+    if read_post and read_post.k >= 3:
+        tot = model.project_continuous_total(read_post, 7)
+        lines.append(f"- **Reading, next 7 days:** "
+                     f"{rng(tot, lambda v: f'{max(v, 0):.0f} min')} total")
+
+    # Money: next 7 and 30 days.
+    exp_post = model.fit_nig(values("expenses", 60))
+    if exp_post and exp_post.k >= 3:
+        w = model.project_continuous_total(exp_post, 7)
+        m = model.project_continuous_total(exp_post, 30)
+        lines.append(f"- **Expenses:** next 7 days {rng(w, money)}, "
+                     f"next 30 days {rng(m, money)}")
+    inc_post = model.fit_nig(values("income", 60))
+    if inc_post and inc_post.k >= 3:
+        m = model.project_continuous_total(inc_post, 30)
+        lines.append(f"- **Income, next 30 days:** {rng(m, money)}")
+
+    if len(lines) <= 4:
+        lines.append("_Not enough data yet — projections appear at 3+ "
+                     "logged days per metric._")
+    return lines + [""]
 
 
 # --------------------------------------------------------------------------

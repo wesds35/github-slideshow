@@ -210,6 +210,58 @@ def continuous_summary(points: list[tuple[date, float]], as_of: date,
 
 
 # --------------------------------------------------------------------------
+# Projections: posterior-predictive forecasts
+# --------------------------------------------------------------------------
+
+def _nig_draws(post: NIGPosterior, n: int = MC_SAMPLES):
+    """Joint draws of (mu, sigma^2) from the NIG posterior."""
+    sigma2 = stats.invgamma.rvs(post.alpha, scale=post.beta, size=n,
+                                random_state=RNG)
+    mu = RNG.normal(post.m, np.sqrt(sigma2 / post.k))
+    return mu, sigma2
+
+
+def _interval(samples: np.ndarray, level: float = 0.9) -> dict:
+    lo = (1 - level) / 2
+    return {"mean": float(samples.mean()),
+            "lo": float(np.quantile(samples, lo)),
+            "hi": float(np.quantile(samples, 1 - lo))}
+
+
+def project_binary(post: BetaPosterior, days: int) -> dict:
+    """Predicted number of use days over the next `days` days."""
+    counts = RNG.binomial(days, post.sample())
+    return _interval(counts.astype(float))
+
+
+def project_continuous_total(post: NIGPosterior, days: int,
+                             non_negative_days: bool = True) -> dict:
+    """Predicted total over the next `days` days (sum of daily draws)."""
+    mu, sigma2 = _nig_draws(post)
+    total = RNG.normal(days * mu, np.sqrt(days * sigma2))
+    if non_negative_days:
+        total = np.maximum(total, 0)
+    return _interval(total)
+
+
+def project_continuous_mean(post: NIGPosterior, days: int) -> dict:
+    """Predicted average per day over the next `days` days."""
+    mu, sigma2 = _nig_draws(post)
+    avg = RNG.normal(mu, np.sqrt(sigma2 / days))
+    return _interval(avg)
+
+
+def project_habit_load(freq: BetaPosterior, dose: NIGPosterior,
+                       days: int) -> dict:
+    """Predicted total intake (e.g. mg) = use days x dose per use day."""
+    n_use = RNG.binomial(days, freq.sample())
+    mu, sigma2 = _nig_draws(dose)
+    total = n_use * mu + RNG.normal(0.0, np.sqrt(np.maximum(n_use, 1) * sigma2))
+    total = np.where(n_use == 0, 0.0, np.maximum(total, 0))
+    return _interval(total)
+
+
+# --------------------------------------------------------------------------
 # Cross-metric: does short sleep predict a habit?
 # --------------------------------------------------------------------------
 
