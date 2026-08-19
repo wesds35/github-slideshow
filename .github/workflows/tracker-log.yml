@@ -64,13 +64,13 @@ jobs:
           python tracker/track.py log "${args[@]}"
 
       - name: Rebuild report
-        run: python tracker/track.py report
+        run: python tracker/track.py report && python tracker/plot.py
 
       - name: Commit and push
         run: |
           git config user.name "tracker-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add tracker/data tracker/report.md
+          git add tracker/data tracker/report.md tracker/chart.png
           if git diff --cached --quiet; then
             echo "No changes."
           else
